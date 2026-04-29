@@ -39,7 +39,7 @@ static const char *extract_responder_uri(X509 *cert, apr_pool_t *pool)
         if (OBJ_obj2nid(value->method) == NID_ad_OCSP
             && value->location->type == GEN_URI) {
             result = apr_pstrdup(pool,
-                                 (char *)value->location->d.uniformResourceIdentifier->data);
+                                 (char *)ASN1_STRING_get0_data(value->location->d.uniformResourceIdentifier));
         }
     }
 
@@ -140,7 +140,7 @@ static int verify_ocsp_status(X509 *cert, X509_STORE_CTX *ctx, conn_rec *c,
     ruri = determine_responder_uri(sc, cert, c, pool);
     if (!ruri) {
         if (sc->server->ocsp_mask & SSL_OCSPCHECK_NO_OCSP_FOR_CERT_OK) {
-            ap_log_cerror(APLOG_MARK, APLOG_TRACE2, 0, c, 
+            ap_log_cerror(APLOG_MARK, APLOG_TRACE2, 0, c,
                           "Skipping OCSP check for certificate cos no OCSP URL"
                           " found and no_ocsp_for_cert_ok is set");
             return V_OCSP_CERTSTATUS_GOOD;
