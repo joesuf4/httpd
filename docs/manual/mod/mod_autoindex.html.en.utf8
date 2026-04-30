@@ -17,7 +17,7 @@
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p>
 <p class="apache">Apache HTTP Server Version 2.5</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -544,14 +544,34 @@ a directory</td></tr>
 </table>
     <p>The <code class="directive">IndexIgnore</code> directive adds to the
     list of files to hide when listing a directory. <var>File</var> is a
-    shell-style wildcard expression or full
-    filename. Multiple IndexIgnore directives add
-    to the list, rather than replacing the list of ignored
-    files. By default, the list contains <code>.</code> (the current
-    directory).</p>
+    filename or pattern which may contain the <code>?</code> and
+    <code>*</code> wildcard characters. <code>?</code> matches any
+    single character, and <code>*</code> matches any sequence of
+    characters, including an empty sequence. Multiple IndexIgnore
+    directives add to the list, rather than replacing the list of
+    ignored files. By default, the list contains <code>.</code> (the
+    current directory).</p>
 
     <pre class="prettyprint lang-config">IndexIgnore .??* *~ *# HEADER* README* RCS CVS *,v *,t</pre>
 
+
+    <p>If <var>File</var> contains a <code>/</code> character, only
+    the portion after the last <code>/</code> is used for matching
+    against filenames. For example, <code>*/.??*</code> is equivalent
+    to <code>.??*</code>.</p>
+
+    <div class="note"><h3>Differences from shell wildcard patterns</h3>
+      <p>The wildcard matching used here is <em>not</em> the same as
+      shell-style (glob) filename pattern matching. In particular:</p>
+      <ul>
+        <li>Bracket expressions such as <code>[abc]</code> or
+        <code>[!.]</code> are not supported; they are treated as
+        literal characters.</li>
+        <li>A leading <code>.</code> in a filename is not treated
+        specially. For example, <code>*~</code> will match
+        <code>.example~</code>, whereas a shell glob would not.</li>
+      </ul>
+    </div>
 
     <div class="note"><h3>Regular Expressions</h3>
       <p>This directive does not currently work in configuration sections
@@ -730,9 +750,11 @@ indexing</td></tr>
                | *]</a></dt>
 
       <dd>The <code>NameWidth</code> keyword allows you to specify the width
-      of the filename column in bytes.</dd>
+      of the filename column in bytes. The value must be greater than
+      5, or <code>*</code> for automatic width. If unset or prefixed
+      with <code>-</code>, the default of 20 bytes is used.</dd>
 
-      <dd><code>-NameWidth</code> (or unset) allows <code class="module"><a href="../mod/mod_autoindex.html">mod_autoindex</a></code> to calculate the best width, but only up
+      <dd>When unset, <code class="module"><a href="../mod/mod_autoindex.html">mod_autoindex</a></code> to calculate the best width, but only up
       to 20 bytes wide.</dd>
 
       <dd><code>NameWidth=<var>n</var></code> fixes the column width to
@@ -785,7 +807,7 @@ indexing</td></tr>
       directive, the module usually includes the contents of the file
       after a standard HTML preamble (<code>&lt;html&gt;</code>,
       <code>&lt;head&gt;</code>, <em>et cetera</em>). The
-      <code>SuppressHTMLPreamble</code> option disables this behaviour,
+      <code>SuppressHTMLPreamble</code> option disables this behavior,
       causing the module to start the display with the header file
       contents. The header file must contain appropriate HTML instructions
       in this case. If there is no header file, the preamble is generated
@@ -962,6 +984,11 @@ IndexOptions +SuppressSize</pre>
      <p>To unconditionally set the <code class="directive">IndexOptions</code> for
      a particular directory, clearing the inherited settings, specify
      keywords without any <code>+</code> or <code>-</code> prefixes.</p>
+
+     <p>Note that the <code>+</code> and <code>-</code> prefixes cannot
+     be used with options that take a value, such as
+     <code>IconWidth</code>, <code>IconHeight</code>,
+     <code>NameWidth</code>, or <code>DescriptionWidth</code>.</p>
    </dd>
    </dl>
 
@@ -1075,7 +1102,7 @@ ReadmeName /include/FOOTER.html</pre>
 <a href="../tr/mod/mod_autoindex.html" hreflang="tr" rel="alternate" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

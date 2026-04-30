@@ -17,7 +17,7 @@ RewriteMap - Serveur HTTP Apache Version 2.5</title>
 
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Signaler un bug</a></p>
 <p class="apache">Serveur HTTP Apache Version 2.5</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -30,7 +30,7 @@ RewriteMap</h1>
 <a href="../tr/programs/httxt2dbm.html" hreflang="tr" rel="alternate" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div>
 
-    <p><code>httxt2dbm</code> permet, à partir d'une entrée au format
+    <p><code class="program"><a href="../programs/httxt2dbm.html">httxt2dbm</a></code> permet, à partir d'une entrée au format
     texte, de générer des fichiers dbm à utiliser dans les directives
     <code class="directive"><a href="../mod/mod_rewrite.html#rewritemap">RewriteMap</a></code> avec le type
     de table <code>dbm</code>.
@@ -86,10 +86,9 @@ RewriteMap</h1>
 </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="examples" id="examples">Exemples</a> <a title="Lien permanent" href="#examples" class="permalink">&para;</a></h2>
-    <div class="example"><p><code>
-      httxt2dbm -i rewritemap.txt -o rewritemap.dbm<br />
-      httxt2dbm -f SDBM -i rewritemap.txt -o rewritemap.dbm<br />
-    </code></p></div>
+    <div class="example"><pre class="prettyprint lang-sh">httxt2dbm -i rewritemap.txt -o rewritemap.dbm
+httxt2dbm -f SDBM -i rewritemap.txt -o rewritemap.dbm</pre>
+</div>
 </div></div>
 <div class="bottomlang">
 <p><span>Langues Disponibles: </span><a href="../en/programs/httxt2dbm.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
@@ -97,7 +96,7 @@ RewriteMap</h1>
 <a href="../tr/programs/httxt2dbm.html" hreflang="tr" rel="alternate" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Signaler un bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

@@ -17,7 +17,7 @@
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p>
 <p class="apache">Apache HTTP Server Version 2.5</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -106,7 +106,7 @@ stylesheets or scripts: for those you should use another parser such as
 The main customisation directives are <code class="directive">ProxyHTMLLinks</code>
 and <code class="directive">ProxyHTMLEvents</code>.  By default these are set in 
 configuration file <var>proxy-html.conf</var>, which also contains
-comments to help you customise your parser if required.</p>
+comments to help you customize your parser if required.</p>
 <div class="note">For historical reasons, configuring mod_proxy_html to rewrite
 URLs in scripting events does not by default rewrite URLs in stylesheets.
 This can be changed by uncommenting the relevant line in
@@ -486,7 +486,7 @@ will be considered as HTML links.</p>
 (note that this happens automatically for HTML links).</p></dd>
 <dt>l</dt>
 <dd><p>Opposite to L.  Overrides the one-change-only default
-behaviour with HTML links.</p></dd>
+behavior with HTML links.</p></dd>
 <dt>R</dt>
 <dd><p>Use Regular Expression matching-and-replace.  <code>from-pattern</code>
 is a regexp, and <code>to-pattern</code> a replacement string that may be
@@ -546,7 +546,7 @@ in mod_proxy_html 3.x for HTTPD 2.0 and 2.2 is also supported.</p>
 <a href="../fr/mod/mod_proxy_html.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

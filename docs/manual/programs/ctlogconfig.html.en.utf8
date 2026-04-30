@@ -16,7 +16,7 @@
 
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p>
 <p class="apache">Apache HTTP Server Version 2.5</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -163,53 +163,51 @@
 
   <p>First we'll configure the URLs for logs where server certificates are logged:</p>
 
-  <div class="example"><p><code>
-    $ ctlogconfig /path/to/conf/log-config configure-url http://log1.example.com/<br />
-    $ ctlogconfig /path/to/conf/log-config configure-url http://log2.example.com/<br />
-    $ ctlogconfig /path/to/conf/log-config dump<br />
-    Log entry:<br />
-      Record 1<br />
-      Log id         : (not configured)<br />
-      Public key file: (not configured)<br />
-      URL            : http://log1.example.com/<br />
-      Time range     : -INF to +INF<br />
-<br />
-    Log entry:<br />
-      Record 2<br />
-      Log id         : (not configured)<br />
-      Public key file: (not configured)<br />
-      URL            : http://log2.example.com/<br />
-      Time range     : -INF to +INF<br />
-  </code></p></div>
+  <div class="example"><pre class="prettyprint lang-sh">$ ctlogconfig /path/to/conf/log-config configure-url http://log1.example.com/
+$ ctlogconfig /path/to/conf/log-config configure-url http://log2.example.com/
+$ ctlogconfig /path/to/conf/log-config dump
+Log entry:
+  Record 1
+  Log id         : (not configured)
+  Public key file: (not configured)
+  URL            : http://log1.example.com/
+  Time range     : -INF to +INF
+
+Log entry:
+  Record 2
+  Log id         : (not configured)
+  Public key file: (not configured)
+  URL            : http://log2.example.com/
+  Time range     : -INF to +INF</pre>
+</div>
 
   <p>Next we'll set the public key of a log where the certificate of our only
   backend server is published.  In this case it is the log with URL
   http://log2.example.com/ which has already been configured.</p>
 
-  <div class="example"><p><code>
-    $ ctlogconfig /path/to/conf/log-config configure-public-key \#2 /path/to/conf/log2-pub.pem<br />
-    $ ctlogconfig /path/to/conf/log-config dump<br />
-    Log entry:<br />
-      Record 1<br />
-      Log id         : (not configured)<br />
-      Public key file: (not configured)<br />
-      URL            : http://log1.example.com/<br />
-      Time range     : -INF to +INF<br />
-<br />
-    Log entry:<br />
-      Record 2<br />
-      Log id         : (not configured)<br />
-      Public key file: /path/to/conf/log2-pub.pem<br />
-      URL            : http://log2.example.com/<br />
-      Time range     : -INF to +INF<br />
-  </code></p></div>
+  <div class="example"><pre class="prettyprint lang-sh">$ ctlogconfig /path/to/conf/log-config configure-public-key \#2 /path/to/conf/log2-pub.pem
+$ ctlogconfig /path/to/conf/log-config dump
+Log entry:
+  Record 1
+  Log id         : (not configured)
+  Public key file: (not configured)
+  URL            : http://log1.example.com/
+  Time range     : -INF to +INF
+
+Log entry:
+  Record 2
+  Log id         : (not configured)
+  Public key file: /path/to/conf/log2-pub.pem
+  URL            : http://log2.example.com/
+  Time range     : -INF to +INF</pre>
+</div>
 </div></div>
 <div class="bottomlang">
 <p><span>Available Languages: </span><a href="../en/programs/ctlogconfig.html" title="English">&nbsp;en&nbsp;</a> |
 <a href="../fr/programs/ctlogconfig.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }
