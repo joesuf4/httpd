@@ -17,7 +17,7 @@
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p>
 <p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -470,15 +470,13 @@ AddOutputFilter INCLUDES .shtml</pre>
       include the onerror path fails, or if onerror is not specified, the
       default error message will be included.</p>
 
-      <div class="example"><p><code>
-        # Simple example<br />
-        &lt;!--#include virtual="/not-exist.html" onerror="/error.html" --&gt;
-      </code></p></div>
+      <div class="example"><pre class="prettyprint lang-html"># Simple example
+&lt;!--#include virtual="/not-exist.html" onerror="/error.html" --&gt;</pre>
+</div>
 
-      <div class="example"><p><code>
-        # Dedicated onerror paths<br />
-        &lt;!--#include virtual="/path-a.html" onerror="/error-a.html" virtual="/path-b.html" onerror="/error-b.html" --&gt;
-      </code></p></div>
+      <div class="example"><pre class="prettyprint lang-html"># Dedicated onerror paths
+&lt;!--#include virtual="/path-a.html" onerror="/error-a.html" virtual="/path-b.html" onerror="/error-b.html" --&gt;</pre>
+</div>
 
       </dd>
       </dl>
@@ -640,12 +638,11 @@ AddOutputFilter INCLUDES .shtml</pre>
 
     <p>The basic flow control elements are:</p>
 
-    <div class="example"><p><code>
-      &lt;!--#if expr="<var>test_condition</var>" --&gt;<br />
-      &lt;!--#elif expr="<var>test_condition</var>" --&gt;<br />
-      &lt;!--#else --&gt;<br />
-      &lt;!--#endif --&gt;
-    </code></p></div>
+    <div class="example"><pre class="prettyprint lang-html">&lt;!--#if expr="test_condition" --&gt;
+&lt;!--#elif expr="test_condition" --&gt;
+&lt;!--#else --&gt;
+&lt;!--#endif --&gt;</pre>
+</div>
 
     <p>The <code>if</code> element works like an if statement in a
     programming language. The test condition is evaluated and if
@@ -672,28 +669,20 @@ AddOutputFilter INCLUDES .shtml</pre>
     <p>The below example will print "from local net" if client IP address
     belongs to the 10.0.0.0/8 subnet.</p>
 
-    <div class="example"><p><code>
-      &lt;!--#if expr='-R "10.0.0.0/8"' --&gt;<br />
-      <span class="indent">
-        from local net<br />
-      </span>
-      &lt;!--#else --&gt;<br />
-      <span class="indent">
-        from somewhere else<br />
-      </span>
-      &lt;!--#endif --&gt;
-    </code></p></div>
+    <div class="example"><pre class="prettyprint lang-html">&lt;!--#if expr='-R "10.0.0.0/8"' --&gt;
+  from local net
+&lt;!--#else --&gt;
+  from somewhere else
+&lt;!--#endif --&gt;</pre>
+</div>
 
     <p>The below example will print "foo is bar" if the variable
     <code>foo</code> is set to the value "bar".</p>
 
-    <div class="example"><p><code>
-      &lt;!--#if expr='v("foo") = "bar"' --&gt;<br />
-      <span class="indent">
-        foo is bar<br />
-      </span>
-      &lt;!--#endif --&gt;
-    </code></p></div>
+    <div class="example"><pre class="prettyprint lang-html">&lt;!--#if expr='v("foo") = "bar"' --&gt;
+  foo is bar
+&lt;!--#endif --&gt;</pre>
+</div>
 
     <div class="note"><h3>Reference Documentation</h3>
     <p>See also: <a href="../expr.html">Expressions in Apache HTTP Server</a>,
@@ -720,14 +709,11 @@ AddOutputFilter INCLUDES .shtml</pre>
       URL, such as a link to that URL. Note that the URL is only tested
       for whether access would be granted, not whether the URL exists.</p>
 
-      <div class="example"><h3>Example</h3><p><code>
-        &lt;!--#if expr="-A /private" --&gt;<br />
-        <span class="indent">
-          Click &lt;a href="/private"&gt;here&lt;/a&gt; to access private
-          information.<br />
-        </span>
-        &lt;!--#endif --&gt;
-      </code></p></div>
+      <div class="example"><h3>Example</h3><pre class="prettyprint lang-html">&lt;!--#if expr="-A /private" --&gt;
+  Click &lt;a href="/private"&gt;here&lt;/a&gt; to access private
+  information.
+&lt;!--#endif --&gt;</pre>
+</div>
       </dd>
 
       <dt><code><var>string1</var> = <var>string2</var><br />
@@ -748,13 +734,10 @@ AddOutputFilter INCLUDES .shtml</pre>
       <code>$9</code>. The whole string matched by the regular expression is
       stored in the special variable <code>$0</code></p>
 
-      <div class="example"><h3>Example</h3><p><code>
-        &lt;!--#if expr="$QUERY_STRING = /^sid=([a-zA-Z0-9]+)/" --&gt;<br />
-        <span class="indent">
-          &lt;!--#set var="session" value="$1" --&gt;<br />
-        </span>
-        &lt;!--#endif --&gt;
-      </code></p></div>
+      <div class="example"><h3>Example</h3><pre class="prettyprint lang-html">&lt;!--#if expr="$QUERY_STRING = /^sid=([a-zA-Z0-9]+)/" --&gt;
+  &lt;!--#set var="session" value="$1" --&gt;
+&lt;!--#endif --&gt;</pre>
+</div>
       </dd>
 
       <dt><code><var>string1</var> &lt; <var>string2</var><br />
@@ -788,10 +771,9 @@ AddOutputFilter INCLUDES .shtml</pre>
     "<code>&amp;&amp;</code>" and "<code>||</code>". "<code>!</code>" binds
     most tightly. Thus, the following are equivalent:</p>
 
-    <div class="example"><p><code>
-      &lt;!--#if expr="$a = test1 &amp;&amp; $b = test2" --&gt;<br />
-      &lt;!--#if expr="($a = test1) &amp;&amp; ($b = test2)" --&gt;
-    </code></p></div>
+    <div class="example"><pre class="prettyprint lang-html">&lt;!--#if expr="$a = test1 &amp;&amp; $b = test2" --&gt;
+&lt;!--#if expr="($a = test1) &amp;&amp; ($b = test2)" --&gt;</pre>
+</div>
 
     <p>The boolean operators <code>&amp;&amp;</code> and <code>||</code>
     share the same priority. So if you want to bind such an operator more
@@ -910,7 +892,7 @@ directive]"</code></td></tr>
         response by adding <code>no-etag</code> to the request notes.</p>
 
       <p>The <code class="directive">SSIETag</code> directive suppresses this
-        behaviour, and allows the server to generate an <code>ETag</code> header.
+        behavior, and allows the server to generate an <code>ETag</code> header.
         This can be used to enable caching of the output. Note that a backend server
         or dynamic content generator may generate an ETag of its own, ignoring
         <code>no-etag</code>, and this ETag will be passed by
@@ -951,7 +933,7 @@ server.</td></tr>
         the <code>Last-Modified</code> header is stripped from the response.</p>
 
       <p>The <code class="directive">SSILastModified</code> directive overrides this
-        behaviour, and allows the <code>Last-Modified</code> header to be respected
+        behavior, and allows the <code>Last-Modified</code> header to be respected
         if already present, or set if the header is not already present. This can
         be used to enable caching of the output. <code class="directive">SSILastModified</code>
         can take on the following values:</p>
@@ -1133,7 +1115,7 @@ set</td></tr>
 <a href="../ja/mod/mod_include.html" hreflang="ja" rel="alternate" title="Japanese">&nbsp;ja&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

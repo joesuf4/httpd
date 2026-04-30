@@ -16,7 +16,7 @@
 
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p>
 <p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -152,7 +152,7 @@
     sentinel is in fact not a valid bucket structure; any attempt to
     call normal bucket functions (such as
     <code>apr_bucket_read</code>) on the sentinel will have undefined
-    behaviour (i.e. will crash the process).</p>
+    behavior (i.e. will crash the process).</p>
 
     <p>There are a variety of functions and macros for traversing and
     manipulating bucket brigades; see the <a href="http://apr.apache.org/docs/apr-util/trunk/group___a_p_r___util___bucket___brigades.html">apr_buckets.h</a>
@@ -320,7 +320,7 @@ apr_status_t dummy_filter(ap_filter_t *f, apr_bucket_brigade *bb)
     state = f-&gt;ctx;
     if (state == NULL) {
 
-        /* First invocation for this response: initialise state structure.
+        /* First invocation for this response: initialize state structure.
          */
         f-&gt;ctx = state = apr_palloc(f-&gt;r-&gt;pool, sizeof *state);
 
@@ -560,7 +560,7 @@ chunk_size = (speed / (1000 / RATE_INTERVAL_MS));</pre>
 <p><span>Available Languages: </span><a href="../en/developer/output-filters.html" title="English">&nbsp;en&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

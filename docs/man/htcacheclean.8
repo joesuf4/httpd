@@ -19,7 +19,7 @@
 .el .ne 3
 .IP "\\$1" \\$2
 ..
-.TH "HTCACHECLEAN" 8 "2019-08-09" "Apache HTTP Server" "htcacheclean"
+.TH "HTCACHECLEAN" 8 "2026-04-30" "Apache HTTP Server" "htcacheclean"
 
 .SH NAME
 htcacheclean \- Clean up the disk cache
@@ -62,7 +62,7 @@ Be verbose and print statistics\&. This option is mutually exclusive with the \f
 Clean thoroughly\&. This assumes that the Apache web server is not running (otherwise you may get garbage in the cache)\&. This option is mutually exclusive with the \fB-d\fR option and implies the \fB-t\fR option\&.  
 .TP
 \fB-n\fR
-Be nice\&. This causes slower processing in favour of other processes\&. \fBhtcacheclean\fR will sleep from time to time so that (a) the disk IO will be delayed and (b) the kernel can schedule other processes in the meantime\&.  
+Be nice\&. This causes slower processing in favor of other processes\&. \fBhtcacheclean\fR will sleep from time to time so that (a) the disk IO will be delayed and (b) the kernel can schedule other processes in the meantime\&.  
 .TP
 \fB-t\fR
 Delete all empty directories\&. By default only cache files are removed, however with some configurations the large number of directories created may require attention\&. If your configuration requires a very large number of directories, to the point that inode or file allocation table exhaustion may become an issue, use of this option is advised\&.  

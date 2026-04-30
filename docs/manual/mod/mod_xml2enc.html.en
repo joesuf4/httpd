@@ -17,7 +17,7 @@
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p>
 <p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -75,7 +75,7 @@ for 2.2.x versions</td></tr></table>
     <code>xml2enc_filter</code> optional function to postprocess to another
     encoding.  Using mod_xml2enc with an enabled module, no configuration
     is necessary: the other module will configure mod_xml2enc for you
-    (though you may still want to customise it using the configuration
+    (though you may still want to customize it using the configuration
     directives below).</p>
     </dd>
     <dt>Non-enabled modules</dt><dd>
@@ -148,10 +148,10 @@ them to a supported encoding using <code class="directive">xml2EncAlias</code>.<
 <tr><th><a href="directive-dict.html#Module">Module:</a></th><td>mod_xml2enc</td></tr>
 </table>
     <p>This server-wide directive aliases one or more encoding to another
-    encoding.  This enables encodings not recognised by libxml2 to be handled
+    encoding.  This enables encodings not recognized by libxml2 to be handled
     internally by libxml2's encoding support using the translation table for
-    a recognised encoding.  This serves two purposes: to support character sets
-    (or names) not recognised either by libxml2 or iconv, and to skip
+    a recognized encoding.  This serves two purposes: to support character sets
+    (or names) not recognized either by libxml2 or iconv, and to skip
     conversion for an encoding where it is known to be unnecessary.</p>
 
 </div>
@@ -194,7 +194,7 @@ can be <a href="#sniffing">automatically detected</a></td></tr>
 <a href="../fr/mod/mod_xml2enc.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Report a bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

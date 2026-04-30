@@ -16,7 +16,7 @@
 
 <link href="../images/favicon.png" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Signaler un bug</a></p>
 <p class="apache">Serveur HTTP Apache Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
@@ -32,7 +32,7 @@
 <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code>. Il montre comment utiliser
 <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> pour rediriger et remettre en
 correspondance une requête. Il contient de
-nombreux exemples d'utilisation courante de mod_rewrite avec une
+nombreux exemples d'utilisation courante de <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> avec une
 description détaillée de leur fonctionnement.</p>
 
 <div class="warning">Vous devez vous attacher à comprendre le
@@ -120,7 +120,7 @@ RewriteRule    "^<strong>foo</strong>\.html$"  "<strong>bar</strong>.html"  [<st
 <dt>Discussion</dt>
 
     <dd>
-    <p>Dans l'exemple <a href="#old-to-new-intern">interne</a>, on a utilisé mod_rewrite afin
+    <p>Dans l'exemple <a href="#old-to-new-intern">interne</a>, on a utilisé <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> afin
     de dissimuler la redirection au client. Dans cet exemple, en
     revanche, on aurait pu se contenter d'une directive Redirect :</p>
 
@@ -246,8 +246,8 @@ RewriteRule    "^foo\.html$"  "foo.cgi"  [H=<strong>cgi-script</strong>]</pre>
     <dt>Discussion</dt>
     <dd>
     <p>Cet exemple utilise une fonctionnalité souvent méconnue de
-    mod_rewrite, en tirant avantage de l'ordre d'exécution du jeu de
-    règles. En particulier, mod_rewrite évalue la partie gauche des
+    <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code>, en tirant avantage de l'ordre d'exécution du jeu de
+    règles. En particulier, <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> évalue la partie gauche des
     règles de réécriture avant d'évaluer les directives RewriteCond. En
     conséquence, $1 est déjà défini au moment où les directives
     RewriteCond sont évaluées. Ceci nous permet de tester l'existence du
@@ -283,7 +283,7 @@ RewriteRule    "^foo\.html$"  "foo.cgi"  [H=<strong>cgi-script</strong>]</pre>
 
         <dd>
 
-<p>Pour y parvenir, il vaut mieux se passer de mod_rewrite, et utiliser
+<p>Pour y parvenir, il vaut mieux se passer de <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code>, et utiliser
 plutôt la directive <code class="directive"><a href="../mod/mod_alias.html#redirect">Redirect</a></code> dans
 une section de serveur virtuel pour le/les noms d'hôte non canoniques.</p>
 
@@ -315,7 +315,7 @@ une section de serveur virtuel pour le/les noms d'hôte non canoniques.</p>
 
 
 <p>Si, pour une raison particulière, vous voulez tout de même utiliser
-<code>mod_rewrite</code> - dans le cas, par exemple, où vous avez besoin
+<code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> - dans le cas, par exemple, où vous avez besoin
 d'un jeu plus important de règles de réécritures - vous pouvez utiliser
 la recette suivante :</p>
 
@@ -692,7 +692,7 @@ RewriteRule "^/?path/([^/]+)/([^/]+)" "/path?$1=$2" [PT]</pre>
 <a href="../fr/rewrite/remapping.html" title="Français">&nbsp;fr&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2026 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="https://cwiki.apache.org/confluence/display/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a> | <a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2">Signaler un bug</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

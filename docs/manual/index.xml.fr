@@ -3,7 +3,7 @@
 <?xml-stylesheet type="text/xsl" href="./style/manual.fr.xsl"?>
 <!-- French translation : Lucien GENTIS -->
 <!-- Reviewed by : Vincent Deffontaines -->
-<!-- English Revision: 1807765 -->
+<!-- English Revision: 1807765:1933437 (outdated) -->
 
 <!--
  Licensed to the Apache Software Foundation (ASF) under one or more
@@ -92,13 +92,13 @@
 </category>
 
 <category id="other"><title>Autres sujets</title>
-    <page href="http://wiki.apache.org/httpd/FAQ">Foire Aux Questions</page>
+    <page href="https://cwiki.apache.org/confluence/display/httpd/FAQ">Foire Aux Questions</page>
     <page href="sitemap.html">Plan du site</page>
     <page href="developer/">Documentation du développeur</page>
     <page href="http://httpd.apache.org/docs-project/">Aide pour la
     documentation</page>
     <page href="misc/">Autres notes</page>
-    <page href="http://wiki.apache.org/httpd/">Wiki</page>
+    <page href="https://cwiki.apache.org/confluence/display/httpd/">Wiki</page>
 </category>
 
 </indexpage>
