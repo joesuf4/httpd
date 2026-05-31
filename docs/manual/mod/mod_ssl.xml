@@ -250,15 +250,18 @@ directive.</p>
 
 <section id="authzproviders"><title>Authorization providers for use with Require</title>
 
-  <p><module>mod_ssl</module> provides a few authentication providers for use
-  with <module>mod_authz_core</module>'s
+  <p><module>mod_ssl</module> provides the following authorization providers
+  for use with <module>mod_authz_core</module>'s
   <directive module="mod_authz_core">Require</directive> directive.</p>
 
   <section id="reqssl"><title>Require ssl</title>
 
     <p>The <code>ssl</code> provider denies access if a connection is not
-       encrypted with SSL. This is similar to the
-       <directive>SSLRequireSSL</directive> directive.</p>
+       encrypted with SSL. Unlike the
+       <directive>SSLRequireSSL</directive> directive, this can be
+       combined with other <directive>Require</directive> directives in
+       <directive module="mod_authz_core">RequireAny</directive> or
+       <directive module="mod_authz_core">RequireAll</directive> blocks.</p>
 
     <highlight language="config">
       Require ssl
@@ -268,8 +271,8 @@ directive.</p>
 
   <section id="reqverifyclient"><title>Require ssl-verify-client</title>
 
-    <p>The <code>ssl</code> provider allows access if the user is
-       authenticated with a valid client certificate. This is only
+    <p>The <code>ssl-verify-client</code> provider allows access if the
+       user is authenticated with a valid client certificate. This is only
        useful if <code>SSLVerifyClient optional</code> is in effect.</p>
 
     <p>The following example grants access if the user is authenticated
@@ -942,11 +945,30 @@ algorithm type.
 Finally the end-entity certificate's private key can also be
 added to the certificate file instead of using a separate
 <directive module="mod_ssl">SSLCertificateKeyFile</directive>
-directive. This practice is highly discouraged. If it is used,
-the certificate files using such an embedded key must be configured
-after the certificates using a separate key file. If the private
-key is encrypted, the pass phrase dialog is forced at startup time.
-</p>
+directive.</p>
+
+<note type="warning"><title>Do not combine key and certificate in one file</title>
+<p>This practice is highly discouraged for the following reasons:</p>
+<ul>
+<li><strong>Security</strong>: Keeping the private key in a separate file
+allows stricter file permissions. The certificate file can be
+world-readable (it is public data), while the key file should be
+readable only by root. Combining them in one file means any
+misconfiguration or vulnerability that exposes the certificate file
+also exposes the private key.</li>
+<li><strong>Ordering constraint</strong>: If a combined file is used,
+all <directive>SSLCertificateFile</directive> directives referencing
+such combined files must appear <em>after</em> any
+<directive>SSLCertificateFile</directive> directives that use a
+separate key file. Violating this ordering will cause errors at
+startup.</li>
+<li><strong>Maintenance</strong>: Separate files make it immediately
+clear which file contains what, simplifying certificate rotation
+and audits.</li>
+</ul>
+<p>If the private key is encrypted, the pass phrase dialog is forced
+at startup time.</p>
+</note>
 
 <p>As an alternative to storing certificates and private keys in
 files, a certificate identifier can be used to identify a certificate
@@ -1040,12 +1062,13 @@ to support multiple algorithms for server authentication. For each
 directive, there must be a matching <directive>SSLCertificateFile</directive>
 directive.</p>
 
-<p>
-The private key may also be combined with the certificate in the file given by
-<directive module="mod_ssl">SSLCertificateFile</directive>, but this practice
-is highly discouraged. If it is used, the certificate files using such
-an embedded key must be configured after the certificates using a separate
-key file.</p>
+<note type="warning"><title>Do not combine key and certificate in one file</title>
+<p>The private key may also be combined with the certificate in the
+file given by <directive module="mod_ssl">SSLCertificateFile</directive>,
+but this practice is highly discouraged. See the warning in the
+<directive>SSLCertificateFile</directive> documentation for a full
+explanation of the risks and constraints.</p>
+</note>
 
 <p>As an alternative to storing private keys in files, a key
 identifier can be used to identify a private key stored in a
@@ -1904,7 +1927,7 @@ on such a connection identifies any other non-default virtual host,
 the compatibility policy is tested.</p>
 
 <p>The <code>strict</code> policy blocks all HTTP requests which are
-identified with a different virtual host to that identifed by SNI.
+identified with a different virtual host to that identified by SNI.
 The <code>insecure</code> policy allows all HTTP requests regardless
 of virtual host identified; such a configuration may be vulnerable to
 <a
@@ -1924,7 +1947,7 @@ virtual hosts, which are grouped into two categories:</p>
   module="mod_ssl">SSLCipherSuite</directive> and <directive
   module="mod_ssl">SSLProtocol</directive>)</li>
 
-  <li><strong>client vertification and authentication
+  <li><strong>client verification and authentication
   settings</strong>: directives which affect TLS client certificate
   verification or authentication, such as <directive
   module="mod_ssl">SSLVerifyClient</directive>, <directive
@@ -2958,7 +2981,10 @@ stapling related OCSP queries (such as responses with an overall status
 other than "successful", responses with a certificate status other than
 "good", expired responses etc.) on to the client.
 If set to <code>off</code>, only responses indicating a certificate status
-of "good" will be included in the TLS handshake.</p>
+of "good" or "revoked" will be included in the TLS handshake.
+Responses with a "revoked" status are always included regardless of
+this setting, because suppressing a known revocation would be a
+security risk.</p>
 </usage>
 </directivesynopsis>
 

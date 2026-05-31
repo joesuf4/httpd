@@ -923,13 +923,16 @@ expressions</description>
     HTTP and target the UDS at /home/www.socket, you would use
     <code>unix:/home/www.socket|http://localhost/whatever/</code>.</p>
 
-    <note><strong>Note:</strong> The path associated with the <code>unix:</code>
+    <note>The path associated with the <code>unix:</code>
     URL is <directive>DefaultRuntimeDir</directive> aware.</note>
 
     <p>When used inside a <directive type="section" module="core"
     >Location</directive> section, the first argument is omitted and the local
     directory is obtained from the <directive type="section" module="core"
-    >Location</directive>. The same will occur inside a
+    >Location</directive>. When used outside a <directive type="section"
+    module="core">Location</directive> or <directive type="section"
+    module="core">LocationMatch</directive> section, the
+    <var>path</var> argument is required. The same will occur inside a
     <directive type="section" module="core">LocationMatch</directive> section;
     however, ProxyPass does not interpret the regexp as such, so it is necessary
     to use <directive>ProxyPassMatch</directive> in this situation instead.</p>
@@ -1055,6 +1058,15 @@ ProxyPass "/mirror/foo/i" "!"
     process, and <code>max</code> and other settings are not coordinated
     among all child processes, except when only one child process is allowed
     by configuration or MPM design.</p>
+    </note>
+
+    <note><title>Connection pooling with prefork MPM</title>
+    <p>With the prefork MPM, connections to backends are not pooled
+    (each child process handles one connection at a time). The
+    <code>acquire</code> and <code>ttl</code> parameters, which
+    control connection pool behavior, have no effect when using
+    prefork. The <code>min</code>, <code>smax</code>, and
+    <code>hmax</code> pool sizing parameters are also ignored.</p>
     </note>
 
     <p>Use the <code>ttl</code> parameter to set an optional
@@ -1279,7 +1291,7 @@ ProxyPass "/example" "http://backend.example.com" max=20 ttl=120 retry=300
         <td><p>Protocol accepted by <module>mod_proxy_http</module> or
         <module>mod_proxy_wstunnel</module> for the HTTP Upgrade mechanism
         upon negotiation by the HTTP client/browser (per
-        <a href="https://www.rfc-editor.org/rfc/rfc9110#name-upgrade">RFC 9110 - Upgrade</a>).
+        <rfc anchor="name-upgrade">9110</rfc> - Upgrade).
         See the <a href="#protoupgrade">Protocol Upgrade</a> note below</p>
     </td></tr>
     <tr><td>mapping</td>
@@ -1549,7 +1561,7 @@ when the <var>url</var> parameter contains backreference(s) (see note below).
        matches, the server will substitute any parenthesized matches into the given
        string and use it as a new <var>url</var>.</p>
 
-    <note><strong>Note: </strong>This directive cannot be used within a
+    <note>This directive cannot be used within a
     <code>&lt;Directory&gt;</code> context.</note>
 
     <note type="warning"><title>Worker matching with backreferences</title>
@@ -1587,7 +1599,10 @@ ProxyPassMatch "^/(.*\.gif)$" "http://backend.example.com/$1"
     <p>When used inside a <directive type="section" module="core"
     >LocationMatch</directive> section, the first argument is omitted and the
     regexp is obtained from the <directive type="section" module="core"
-    >LocationMatch</directive>.</p>
+    >LocationMatch</directive>. When used outside a <directive type="section"
+    module="core">Location</directive> or <directive type="section"
+    module="core">LocationMatch</directive> section, the
+    <var>regex</var> argument is required.</p>
 
     <p>If you require a more flexible reverse-proxy configuration, see the
     <directive module="mod_rewrite">RewriteRule</directive> directive with the
@@ -1607,7 +1622,7 @@ ProxyPassMatch "^/(.*\.gif)$" "http://backend.example.com/$1"
       behavior regarding reuse/keepalive of backend connections (which were
       never reused before for these URLs), the parameter <var>enablereuse</var>
       (or <var>disablereuse</var>) default to <code>off</code> (resp. <code>on</code>)
-      in this case. Setting <code>enablereuse=on</code> explicitely allows to
+      in this case. Setting <code>enablereuse=on</code> explicitly allows to
       reuse connections <strong>unless</strong> some backreference(s) belong in
       the <code>authority</code> part (hostname and/or port) of the <var>url</var>
       (this condition is enforced since Apache HTTP Server 2.4.55, and produces
@@ -1693,7 +1708,10 @@ ProxyPassReverseCookiePath  "/"  "/mirror/foo/"
     <p>When used inside a <directive type="section" module="core"
     >Location</directive> section, the first argument is omitted and the local
     directory is obtained from the <directive type="section" module="core"
-    >Location</directive>. The same occurs inside a <directive type="section"
+    >Location</directive>. When used outside a <directive type="section"
+    module="core">Location</directive> or <directive type="section"
+    module="core">LocationMatch</directive> section, the
+    <var>path</var> argument is required. The same occurs inside a <directive type="section"
     module="core">LocationMatch</directive> section, but will probably not work as
     intended, as ProxyPassReverse will interpret the regexp literally as a
     path; if needed in this situation, specify the ProxyPassReverse outside
@@ -1858,7 +1876,7 @@ through</description>
 <default>ProxyMaxForwards -1</default>
 <contextlist><context>server config</context><context>virtual host</context>
 </contextlist>
-<compatibility>Default behaviour changed in 2.2.7</compatibility>
+<compatibility>Default behavior changed in 2.2.7</compatibility>
 
 <usage>
     <p>The <directive>ProxyMaxForwards</directive> directive specifies the

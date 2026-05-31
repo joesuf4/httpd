@@ -2,7 +2,7 @@
 <!DOCTYPE modulesynopsis SYSTEM "../style/modulesynopsis.dtd">
 <?xml-stylesheet type="text/xsl" href="../style/manual.fr.xsl"?>
 <!-- French translation : Lucien GENTIS -->
-<!-- English Revision: 1932366:1933503 (outdated) -->
+<!-- English Revision: 1933742 -->
 
 <!--
  Licensed to the Apache Software Foundation (ASF) under one or more
@@ -37,8 +37,7 @@
 	Ce module permet de gérer les propriétés courantes des domaines pour un
 	ou plusieurs serveurs virtuels. Il fournit deux fonctionnalités
 	principales : la première permet la supervision et le renouvellement des
-	certificats TLS via le protocole ACME (<a
-	href="https://tools.ietf.org/html/rfc8555">RFC 8555</a>). Le module
+	certificats TLS via le protocole ACME (<rfc>8555</rfc>). Le module
 	effectue le renouvellement des certificats avant leur expiration
 	afin d'éviter une interruption des services internet. Il est possible de
 	monitorer l'état de tous les certificats gérés par mod_md et de configurer
@@ -1207,8 +1206,9 @@ MDRequireHttps permanent
         <usage>
             <p>
 		Cette directive permet de définir la commande à appeler
-		lorsqu'un des évènements "renewed", "installed", "expiring" ou
-		"errored" se produit pour un domaine géré. La commande sera
+		lorsqu'un des évènements "renewed", "installed", "expiring",
+		"errored", "renewing", "challenge-setup:type:domain",
+		"ocsp-renewed" ou "ocsp-errored" se produit pour un domaine géré. La commande sera
 		probablement invoquée pour d'autres évènements dans le futur et
 		ignorera les évènements pour lesquels elle n'aura pas été
 		préparée.
@@ -1271,13 +1271,18 @@ MDMessageCmd /etc/apache/md-message
 		configurations de clusters peuvent utiliser cet évènement pour
 		distribuer les fichiers de vérification à tous les noeuds.
             </p><p>
-		Un évènement de type ocsp-errored est déclenché lorsque le
+		Un évènement de type "ocsp-errored" est déclenché lorsque le
 		<directive module="mod_md">MDStapling</directive> est activé
 		pour un domaine, et indique qu'une erreur s'est produite en
 		essayant d'obtenir la réponse OCSP  de l'autorité de
 		certification. mod_md essaiera à nouveau d'obtenir cette
 		réponse.		
-            </p>
+            </p><p>
+                Un évènement de type "ocsp-renewed" est déclenché lorsqu'une
+		nouvelle réponse OCSP a été obtenu avec succès pour un
+		certificat de domaine. Cet évènement de produit au plus une fois
+		par jour.
+	    </p>
         </usage>
     </directivesynopsis>
 
@@ -1503,8 +1508,8 @@ MDMessageCmd /etc/apache/md-message
 
     <directivesynopsis>
         <name>MDCertificateCheck</name>
-        <description>Définit le motif de nom et d’URL pour un nom de site de
-	vérification de certificat.</description>
+        <description>Définit le motif de nom et d'URL pour un site de
+	vérification de certificat</description>
         <syntax>MDCertificateCheck <var>name</var> <var>url</var></syntax>
         <contextlist>
             <context>server config</context>
@@ -1519,11 +1524,11 @@ MDMessageCmd /etc/apache/md-message
 
     <directivesynopsis>
         <name>MDActivationDelay</name>
-        <description>Définit le délai d'activation des nouveaux certificats</description>
+        <description>Délai d'activation des nouveaux certificays</description>
         <syntax>MDActivationDelay <var>duration</var></syntax>
         <contextlist>
             <context>server config</context>
-        </contextlist>
+        </contextlist>    
         <compatibility>Disponible à partir de la version 2.4.42 du serveur HTTP
 	Apache</compatibility>
         <usage>
@@ -1633,8 +1638,8 @@ MDMessageCmd /etc/apache/md-message
 		pas les renouvellements des autres domaines.
             </p>
 	    <p>
-                Dans mod_md version 2.6.1, le délai par défaut a été augmenté de
-		5 à 30 secondes.
+		 Avec la version 2.6.1 de mod_md, le temps d'attente a été
+		 augmenté de&nbsp;5 à 30&nbsp;secondes.
             </p>
         </usage>
     </directivesynopsis>
@@ -1757,9 +1762,9 @@ MDMessageCmd /etc/apache/md-message
 		sous-domaines spécifiques.
             </p>
         </usage>
-    </directivesynopsis>    
+    </directivesynopsis>
 
-        <directivesynopsis>
+    <directivesynopsis>
         <name>MDCheckInterval</name>
         <description>Détermine la périodicité de la vérification des certificats</description>
         <syntax>MDCheckInterval <var>duration</var></syntax>
@@ -1771,17 +1776,17 @@ MDMessageCmd /etc/apache/md-message
 	Apache</compatibility>
         <usage>
 	    <p>
-	    Cette option permet de définir l’intervalle entre deux
+	    Cette option permet de définir l'intervalle entre deux
 	    vérifications de certificat. Par défaut, la validité et le besoin de
 	    renouvellement sont vérifiés deux fois par jour. Cet intervalle
-	    n’est cependant pas appliqué avec précision. En effet, le module lui
+	    n'est cependant pas appliqué avec précision. En effet, le module lui
 	    applique une plage de variation aléatoire de +/- 50%. Avec
-	    l’intervalle par défaut de 12&nbsp;heures, cela signifie que l’intervalle
+	    l'intervalle par défaut de 12&nbsp;heures, cela signifie que l'intervalle
 	    réel entre deux vérifications varie entre 6&nbsp;et 18&nbsp;heures, la
-	    variation s’appliquant à nouveau à chaque vérification. Cela permet
-	    d’atténuer les pics de trafic sur les serveurs ACME.
+	    variation s'appliquant à nouveau à chaque vérification. Cela permet
+	    d'atténuer les pics de trafic sur les serveurs ACME.
             </p><p>
-	    La valeur minimale pouvant être définie pour l’intervalle est de
+	    La valeur minimale pouvant être définie pour l'intervalle est de
 	    1&nbsp;seconde. Il est cependant déconseillé de définir un intervalle
 	    aussi court sur un serveur en production.
             </p>
@@ -1799,7 +1804,7 @@ MDMessageCmd /etc/apache/md-message
 	Apache</compatibility>
         <usage>
             <p>
-                Il s’agit d’une extension non standard d’ACME par Let's Encrypt.
+                Il s'agit d'une extension non standard d'ACME par Let's Encrypt.
             </p><p>
 		Lets Encrypt prend en charge les profiles de certificat dans
 		leurs CA. Cette fonctionnalité, entre autres détails, vous
@@ -1811,11 +1816,11 @@ MDMessageCmd /etc/apache/md-message
 		validité est de 6&nbsp;jours seulement.
             </p><p>
                 Si vous ne modifiez pas la configuration de votre module mod_md,
-		vous continuerez à recevoir des certificats d’une durée de
-		validité de 90&nbsp;jours. Si vous pensez qu’une durée de validité
+		vous continuerez à recevoir des certificats d'une durée de
+		validité de 90&nbsp;jours. Si vous pensez qu'une durée de validité
 		plus courte convient mieux à votre situation (et acceptez le
 		risque que le temps de renouvellement soit beaucoup plus court),
-		vous pouvez définir le profile à utiliser à l’aide de
+		vous pouvez définir le profile à utiliser à l'aide de
 		«&nbsp;MDProfile shortlived ».
            </p><p>
                 Les noms de profile sont définis par le CA. Si vous tentez de
@@ -1841,11 +1846,11 @@ MDMessageCmd /etc/apache/md-message
             <p>
                 Cette directive permet de contrôler si un <directive
 		module="mod_md">MDProfile</directive> que vous définissez est
-		obligatoire ou non. S’il est obligatoire et si le CA ne propose
+		obligatoire ou non. S'il est obligatoire et si le CA ne propose
 		pas de profile configuré, le renouvellement du certificat
 		échouera.
            </p><p>
-                S’il n’est pas obligatoire et si le CA ne propose
+                S'il n'est pas obligatoire et si le CA ne propose
 		pas de profile, les renouvellements seront effectués sans
 		profile particulier et le CA délivrera les certificats avec les
 		valeurs par défaut.
@@ -1855,7 +1860,7 @@ MDMessageCmd /etc/apache/md-message
 
     <directivesynopsis>
         <name>MDRenewViaARI</name>
-        <description>Utilisation de l’extension ACME ARI (rfc9773).</description>
+        <description>Utilisation de l'extension ACME ARI (rfc9773).</description>
         <syntax>MDRenewViaARI on|off</syntax>
         <default>MDRenewViaARI on</default>
         <contextlist>
@@ -1863,16 +1868,16 @@ MDMessageCmd /etc/apache/md-message
         </contextlist>
         <usage>
             <p>
-                Cette directive permet d’activer ou de désactiver le
-		déclenchement du renouvellement des certificats à l’aide de
-		l’extension ACME ARI (rfc9773). Ces renouvellements s’ajoutent à
-		ceux déclenchés par le mécanisme contrôlé à l’aide de la
+                Cette directive permet d'activer ou de désactiver le
+		déclenchement du renouvellement des certificats à l'aide de
+		l'extension ACME ARI (rfc9773). Ces renouvellements s'ajoutent à
+		ceux déclenchés par le mécanisme contrôlé à l'aide de la
 		directive <directive>MDRenewWindow</directive>.
            </p><p>
                 ACME ARI permet en quelque sorte à une CA ACME de façonner le
 		trafic entrant des renouvellements. Plus important cependant,
-		cette extension peut informer les clients de l’urgence d’un
-		renouvellement, par exemple lorsqu’un certificat ou une partie
+		cette extension peut informer les clients de l'urgence d'un
+		renouvellement, par exemple lorsqu'un certificat ou une partie
 		de sa chaîne de certification a été révoqué(e).
             </p>
         </usage>
@@ -1890,7 +1895,7 @@ MDMessageCmd /etc/apache/md-message
 	Apache</compatibility>
         <usage>
             <p>
-                Le temps d’attente, après le démarrage du serveur, avant de
+                Le temps d'attente, après le démarrage du serveur, avant de
 		vérifier si des certificats doivent être renouvelés. Par défaut,
 		cette vérification est immédiate.
             </p>
@@ -1913,7 +1918,7 @@ MDMessageCmd /etc/apache/md-message
 		serveur ACME de test qui possède son propre certificat racine.
 		Les administrateurs qui possèdent une autorité de certification
 		interne propre à une entreprise peuvent utiliser cette directive
-		lorsqu’ils utilisent leurs propres serveurs ACME.
+		lorsqu'ils utilisent leurs propres serveurs ACME.
             </p>
             <p>
                 Définissez cette directive à «&nbsp;none&nbsp;» pour la désactiver
