@@ -8,7 +8,8 @@ def frame_padding(payload, padbits):
     return ((payload + 9 + mask) & ~mask) - (payload + 9)
         
 
-@pytest.mark.skipif(condition=H2TestEnv.is_unsupported, reason="mod_http2 not supported here")
+@pytest.mark.skipif(condition=H2TestEnv.is_unsupported(), reason="mod_http2 not supported here")
+@pytest.mark.skipif(not H2TestEnv().has_nghttp(), reason="nghttp not available")
 class TestPadding:
 
     @pytest.fixture(autouse=True, scope='class')

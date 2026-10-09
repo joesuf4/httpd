@@ -241,20 +241,30 @@ static int scan_meta_file(request_rec *r, apr_file_t *f)
             ++l;
 
         if (!ap_cstr_casecmp(w, "Content-type")) {
-            char *tmp;
+            char *tmp, *end;
             /* Nuke trailing whitespace */
 
-            char *endp = l + strlen(l) - 1;
-            while (endp > l && apr_isspace(*endp))
-                *endp-- = '\0';
+            end = ap_cstr_stripws(l);
 
-            tmp = apr_pstrdup(r->pool, l);
+            tmp = apr_pstrmemdup(r->pool, l, end - l);
             ap_content_type_tolower(tmp);
             ap_set_content_type(r, tmp);
         }
         else if (!ap_cstr_casecmp(w, "Status")) {
             sscanf(l, "%d", &r->status);
             r->status_line = apr_pstrdup(r->pool, l);
+        }
+        else if (!ap_cstr_casecmp(w, "Transfer-Encoding")
+                 || !ap_cstr_casecmp(w, "Content-Length")
+                 || !ap_cstr_casecmp(w, "Connection")
+                 || !ap_cstr_casecmp(w, "Trailer")
+                 || !ap_cstr_casecmp(w, "Upgrade")
+                 || !ap_cstr_casecmp(w, "Keep-Alive")
+                 || !ap_cstr_casecmp(w, "TE")) {
+            ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(10596)
+                          "forbidden HTTP framing header '%s' in meta file: %s",
+                          w, r->filename);
+            return HTTP_INTERNAL_SERVER_ERROR;
         }
         else {
             apr_table_set(tmp_headers, w, l);

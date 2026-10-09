@@ -333,6 +333,31 @@
       See: <a href="ssl/">SSL/TLS Encryption</a>
     </dd>
 
+    <dt><a name="perdirectory" id="perdirectory">Per-directory Context</a></dt>
+    <dd>A <glossary ref="directive">directive</glossary> is in
+      per-directory context when it appears in a <directive type="section"
+      module="core">Directory</directive>, <directive type="section"
+      module="core">DirectoryMatch</directive>, <directive type="section"
+      module="core">Files</directive>, or <directive type="section"
+      module="core">FilesMatch</directive> section in the main
+      configuration files, or in a <code>.htaccess</code> file.
+      In per-directory context, directives apply only to the
+      directory (or set of files) they are associated with.<br />
+      See: <a href="sections.html">Configuration Sections</a>
+    </dd>
+
+    <dt><a name="pathinfo" id="pathinfo">PATH_INFO</a></dt>
+    <dd>The trailing path information that follows the actual filename
+      in a URL. For example, if <code>/app/index.php/extra/path</code>
+      maps to the file <code>/app/index.php</code>, then the PATH_INFO
+      is <code>/extra/path</code>. It is passed to CGI scripts, PHP,
+      and other handlers as additional context about the request. The
+      <directive module="core">AcceptPathInfo</directive> directive controls
+      whether requests with trailing path information are accepted or
+      rejected.<br />
+      See: <rfc section="4.1.5">3875</rfc>
+    </dd>
+
     <dt><a name="plaintext" id="plaintext">Plaintext</a></dt>
     <dd>The unencrypted text.</dd>
 

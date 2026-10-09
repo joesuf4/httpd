@@ -395,7 +395,7 @@ class TestDrivev2:
         # check new cert
         env.check_md_credentials([name, "test." + domain])
         new_cert = MDCertUtil(env.store_domain_file(name, 'pubcert.pem'))
-        assert not old_cert.same_serial_as(new_cert.get_serial)
+        assert not old_cert.same_serial_as(new_cert.get_serial())
 
     @pytest.mark.parametrize("renew_window,test_data_list", [
         ("14d", [
@@ -440,6 +440,11 @@ class TestDrivev2:
             md = env.a2md(["list", name]).json['output'][0]
             assert md["renew"] == tc["renew"], \
                 "Expected renew == {} indicator in {}, test case {}".format(tc["renew"], md, tc)
+        env.httpd_error_log.ignore_recent(
+            lognos=[
+                "AH10045"
+            ]
+        )
 
     @pytest.mark.parametrize("key_type,key_params,exp_key_length", [
         ("RSA", [2048], 2048),
@@ -466,6 +471,11 @@ class TestDrivev2:
         # check cert key length
         cert = MDCertUtil(env.store_domain_file(name, 'pubcert.pem'))
         assert cert.get_key_length() == exp_key_length
+        env.httpd_error_log.ignore_recent(
+            lognos=[
+                "AH10045"
+            ]
+        )
 
     # test_502_203 removed, as ToS agreement is not really checked in ACMEv2
 
@@ -550,4 +560,4 @@ class TestDrivev2:
         # check: key file is encrypted PEM
         md = env.a2md(["list", name]).json['output'][0]
         acc = md['ca']['account']
-        MDCertUtil.validate_privkey(env.path_account_key(acc), lambda *args: encrypt_key)
+        MDCertUtil.validate_privkey(env.path_account_key(acc), encrypt_key)

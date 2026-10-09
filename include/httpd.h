@@ -941,8 +941,8 @@ struct request_rec {
      *  handler can't be installed by mod_actions.
      */
     ap_method_mask_t allowed;
-    /** Array of extension methods */
-    apr_array_header_t *allowed_xmethods;
+    /* "allowed_xmethods" lived here previously, but was never used: */
+    void *unused;
     /** List of allowed methods */
     ap_method_list_t *allowed_methods;
 
@@ -1161,7 +1161,7 @@ struct request_rec {
      * to conclude that no body is there.
      */
     unsigned int body_indeterminate :1;
-    /** Whether a final (status >= 200) RESPONSE BUCKET has been passed down
+    /** Whether a final (status >= HTTP_OK) RESPONSE BUCKET has been passed down
      * the output filters already. Relevant for ap_die().
      *  TODO: compact elsewhere
      */
@@ -2779,6 +2779,13 @@ AP_DECLARE(int) ap_array_str_index(const apr_array_header_t *array,
  */
 AP_DECLARE(int) ap_array_str_contains(const apr_array_header_t *array, 
                                       const char *s);
+
+/**
+ * Strip trailing whitespace from a NUL-terminated string in place.
+ * @param str String to modify
+ * @return Pointer to the terminating NUL of the modified string
+ */
+AP_DECLARE(char *) ap_cstr_stripws(char *str);
 
 /**
  * Perform a case-insensitive comparison of two strings @a str1 and @a str2,

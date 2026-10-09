@@ -164,6 +164,7 @@ static void fix_skipto(request_rec* r, xml2ctx* ctx)
                         apr_bucket_delete(b);
                     }
                     ctx->bytes -= (p-ctx->buf);
+                    ctx->bblen -= (p-ctx->buf);
                     ctx->buf = p ;
                     found = 1;
                     ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(01428)
@@ -531,9 +532,10 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
                     switch (rv) {
                     case APR_SUCCESS:
                         continue;
-                    case APR_EINCOMPLETE:
+                    case APR_INCOMPLETE:
                         ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r, APLOGNO(01443)
-                                      "INCOMPLETE");
+                                      "Incomplete byte sequence: %" APR_SIZE_T_FMT
+                                      " bytes unconverted", insz);
                         continue;     /* If outbuf too small, go round again.
                                        * If it was inbuf, we'll break out when
                                        * we test ctx->bytes == ctx->bblen
@@ -544,9 +546,7 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
                         --insz;
                         continue;
                     default:
-                        /* Erk!  What's this?
-                         * Bail out, flush, and hope to eat the buf raw
-                         */
+                        /* Bail out, flush, and pass remaining data raw. */
                         ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, f->r, APLOGNO(01445)
                                       "Failed to convert input; trying it raw") ;
                         ctx->convset = NULL;
@@ -555,6 +555,14 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
                             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, rv, f->r, APLOGNO(01446)
                                           "ap_fflush failed");
                         apr_brigade_cleanup(ctx->bbnext);
+                        if (insz) {
+                            b = apr_bucket_transient_create(
+                                    buf + (bytes - insz), insz,
+                                    bb->bucket_alloc);
+                            APR_BRIGADE_INSERT_HEAD(bb, b);
+                        }
+                        ap_remove_output_filter(f);
+                        return ap_pass_brigade(f->next, bb);
                     }
                 }
             } else {
@@ -563,7 +571,7 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
             }
             if (bdestroy)
                 apr_bucket_destroy(bdestroy);
-            if (rv != APR_SUCCESS)
+            if (rv != APR_SUCCESS && rv != APR_INCOMPLETE)
                 return rv;
         }
     }
@@ -604,6 +612,7 @@ static void xml2enc_hooks(apr_pool_t* pool)
                                   AP_REG_EXTENDED|AP_REG_ICASE) ;
     seek_charset = ap_pregcomp(pool, "charset=([A-Za-z0-9_-]+)",
                                AP_REG_EXTENDED|AP_REG_ICASE) ;
+    ap_assert(seek_meta_ctype && seek_charset);
 }
 static const char* set_alias(cmd_parms* cmd, void* CFG,
                              const char* charset, const char* alias)

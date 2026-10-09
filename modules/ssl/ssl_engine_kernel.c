@@ -29,6 +29,7 @@
                                   time I was too famous.''
                                             -- Unknown                */
 #include "ssl_private.h"
+#include "httpd.h"
 #include "mod_ssl.h"
 #include "util_md5.h"
 #include "scoreboard.h"
@@ -453,6 +454,9 @@ static int ssl_hook_Access_classic(request_rec *r, SSLSrvConfigRec *sc, SSLDirCo
              * Modifying the SSL on a slave connection is no good.
              */
             apr_table_setn(r->notes, "ssl-renegotiate-forbidden", "cipher-suite");
+            if (cipher_list_old) {
+                sk_SSL_CIPHER_free(cipher_list_old);
+            }
             return HTTP_FORBIDDEN;
         }
 
@@ -944,7 +948,6 @@ static int ssl_hook_Access_modern(request_rec *r, SSLSrvConfigRec *sc, SSLDirCon
             return DECLINED;
         }
 
-        vmode_needed |= SSL_VERIFY_CLIENT_ONCE;
         if (vmode_inplace != vmode_needed) {
             /* Need to change, if new setting is more restrictive than existing one */
 
@@ -1130,8 +1133,10 @@ int ssl_hook_Access(request_rec *r)
     if ((dc->nOptions & SSL_OPT_FAKEBASICAUTH) == 0 && dc->szUserName) {
         const char *val = ssl_var_lookup(r->pool, r->server, r->connection,
                                          r, dc->szUserName);
-        if (val && val[0])
+        if (val && val[0]) {
             r->user = apr_pstrdup(r->pool, val);
+            r->ap_auth_type = "ClientCert";
+        }
         else
             ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(02227)
                           "Failed to set r->user to '%s'", dc->szUserName);
@@ -2236,7 +2241,7 @@ static apr_status_t set_challenge_creds(conn_rec *c, const char *servername,
 cleanup:
     if (our_data && cert) X509_free(cert);
     if (our_data && key) EVP_PKEY_free(key);
-    return APR_SUCCESS;
+    return rv;
 }
   
 /*

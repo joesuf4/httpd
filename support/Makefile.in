@@ -1,10 +1,12 @@
-DISTCLEAN_TARGETS = apxs apachectl dbmmanage log_server_status \
-	logresolve.pl phf_abuse_log.cgi split-logfile envvars-std
+DISTCLEAN_TARGETS = apxs apxs-ng apachectl dbmmanage dbmmanage-ng \
+	log_server_status log_server_status-ng logresolve.pl logresolve.py \
+	phf_abuse_log.cgi phf_abuse_log-ng.cgi split-logfile split-logfile-ng \
+	envvars-std
 
 CLEAN_TARGETS = suexec
 
 bin_PROGRAMS = htpasswd htdigest htdbm firehose ab logresolve httxt2dbm
-sbin_PROGRAMS = htcacheclean rotatelogs $(NONPORTABLE_SUPPORT)
+sbin_PROGRAMS = htcacheclean rotatelogs $(EXTRA_SBIN_PROGRAMS)
 TARGETS  = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 
 PROGRAM_LDADD        = $(UTIL_LDFLAGS) $(PROGRAM_DEPENDENCIES) $(EXTRA_LIBS) $(AP_LIBS)
@@ -17,7 +19,7 @@ install:
 	@test -d $(DESTDIR)$(sbindir) || $(MKINSTALLDIRS) $(DESTDIR)$(sbindir)
 	@test -d $(DESTDIR)$(libexecdir) || $(MKINSTALLDIRS) $(DESTDIR)$(libexecdir)
 	@cp -p $(top_builddir)/server/httpd.exp $(DESTDIR)$(libexecdir)
-	@for i in apxs dbmmanage; do \
+	@for i in apxs apxs-ng dbmmanage dbmmanage-ng; do \
 	    if test -f "$(builddir)/$$i"; then \
 	        cp -p $$i $(DESTDIR)$(bindir); \
 	        chmod 755 $(DESTDIR)$(bindir)/$$i; \
@@ -91,4 +93,10 @@ fcgistarter: $(fcgistarter_OBJECTS)
 firehose_OBJECTS = firehose.lo
 firehose: $(firehose_OBJECTS)
 	$(LINK) $(firehose_LTFLAGS) $(firehose_OBJECTS) $(PROGRAM_LDADD)
+
+# a2md is only built and installed when configure added a2md/a2md to
+# EXTRA_SBIN_PROGRAMS (mod_md dependencies curl, jansson and openssl found).
+a2md/a2md:
+	cd a2md && $(MAKE) $(MFLAGS) a2md
+
 

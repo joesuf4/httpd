@@ -820,7 +820,7 @@ static request_rec *make_fake_req(conn_rec *c, request_rec *r)
 static void process_proxy_header(request_rec *r, proxy_dir_conf *c,
                                  const char *key, const char *value)
 {
-    static const char *date_hdrs[]
+    static const char *const date_hdrs[]
         = { "Date", "Expires", "Last-Modified", NULL };
     static const struct {
         const char *name;
@@ -864,7 +864,7 @@ static apr_status_t ap_proxy_read_headers(request_rec *r, request_rec *rr,
                                   conn_rec *c, int *pread_len)
 {
     int len;
-    char *value, *end;
+    char *value;
     int saw_headers = 0;
     void *sconf = r->server->module_config;
     proxy_server_conf *psc;
@@ -973,8 +973,7 @@ static apr_status_t ap_proxy_read_headers(request_rec *r, request_rec *rr,
             ++value;            /* Skip to start of value   */
 
         /* should strip trailing whitespace as well */
-        for (end = &value[strlen(value)-1]; end > value && apr_isspace(*end); --end)
-            *end = '\0';
+        ap_cstr_stripws(value);
 
         /* make sure we add so as not to destroy duplicated headers
          * Modify headers requiring canonicalisation and/or affected
@@ -1086,7 +1085,7 @@ int ap_proxy_http_process_response(proxy_http_req_t *req)
     int pread_len = 0;
     apr_table_t *save_table;
     int backend_broke = 0;
-    static const char *hop_by_hop_hdrs[] =
+    static const char *const hop_by_hop_hdrs[] =
         {"Keep-Alive", "Proxy-Authenticate", "TE", "Trailer", "Upgrade", NULL};
     int i;
     const char *te = NULL;
@@ -1288,7 +1287,7 @@ int ap_proxy_http_process_response(proxy_http_req_t *req)
                  */
                 r->headers_out = apr_table_make(r->pool,1);
                 r->status = HTTP_BAD_GATEWAY;
-                r->status_line = "bad gateway";
+                r->status_line = ap_get_status_line(r->status);
                 return r->status;
             }
 
@@ -1413,8 +1412,8 @@ int ap_proxy_http_process_response(proxy_http_req_t *req)
         } else {
             /* an http/0.9 response */
             backasswards = 1;
-            r->status = proxy_status = 200;
-            r->status_line = "200 OK";
+            r->status = proxy_status = HTTP_OK;
+            r->status_line = ap_get_status_line(r->status);
             backend->close = 1;
         }
 

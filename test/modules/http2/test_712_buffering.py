@@ -1,4 +1,5 @@
 from datetime import timedelta
+import sys
 
 import pytest
 
@@ -6,7 +7,7 @@ from .env import H2Conf, H2TestEnv
 from pyhttpd.curl import CurlPiper
 
 
-@pytest.mark.skipif(condition=H2TestEnv.is_unsupported, reason="mod_http2 not supported here")
+@pytest.mark.skipif(condition=H2TestEnv.is_unsupported(), reason="mod_http2 not supported here")
 class TestBuffering:
 
     @pytest.fixture(autouse=True, scope='class')
@@ -38,6 +39,8 @@ class TestBuffering:
         piper.stutter_check(chunks, stutter)
 
     def test_h2_712_02(self, env):
+        if sys.platform == "win32":
+            pytest.skip("h2proxy echo buffering unreliable on mpm_winnt")
         # same as 712_01 but via mod_proxy_http2
         #
         url = env.mkurl("https", "cgi", "/h2proxy/h2test/echo")
@@ -48,6 +51,8 @@ class TestBuffering:
         piper.stutter_check(chunks, stutter)
 
     def test_h2_712_03(self, env):
+        if sys.platform == "win32":
+            pytest.skip("h2proxy echo buffering unreliable on mpm_winnt")
         # same as 712_02 but with smaller chunks
         #
         url = env.mkurl("https", "cgi", "/h2proxy/h2test/echo")

@@ -34,7 +34,7 @@ DISTCLEAN_TARGETS  = include/ap_config_auto.h include/ap_config_layout.h \
 	build/pkg/pkginfo build/config_vars.sh bsd_converted
 EXTRACLEAN_TARGETS = configure include/ap_config_auto.h.in generated_lists \
 	httpd.spec
-PHONY_TARGETS := check check-conf check-dirs check-include unittest-objdir
+PHONY_TARGETS := check check-conf check-dirs check-include check-pytest check-all-pytest unittest-objdir
 
 TESTS =
 TEST_CONFIG =
@@ -435,13 +435,39 @@ check-conf:
 check-dirs:
 	@mkdir -p check/htdocs check/logs check/bin
 
-check-binaries: check/bin/apxs check/bin/httpd check/bin/ab
+# EXTRA_CHECK_BINARIES is set by configure for optional support programs
+# (e.g. check/bin/a2md when a2md is enabled).
+check-binaries: check/bin/apxs check/bin/httpd check/bin/ab \
+	check/bin/htcacheclean check/bin/httxt2dbm check/bin/htpasswd \
+	check/bin/htdigest check/bin/htdbm check/bin/logresolve \
+	$(EXTRA_CHECK_BINARIES)
 
 check/bin/httpd:
-	ln -s $(top_builddir)/httpd check/bin/httpd
+	ln -s $(top_builddir)/$(PROGRAM_NAME) check/bin/httpd
 
 check/bin/ab:
 	ln -s $(top_builddir)/support/ab check/bin/ab
+
+check/bin/htpasswd:
+	ln -s $(top_builddir)/support/htpasswd check/bin/htpasswd
+
+check/bin/htdigest:
+	ln -s $(top_builddir)/support/htdigest check/bin/htdigest
+
+check/bin/htdbm:
+	ln -s $(top_builddir)/support/htdbm check/bin/htdbm
+
+check/bin/logresolve:
+	ln -s $(top_builddir)/support/logresolve check/bin/logresolve
+
+check/bin/htcacheclean:
+	ln -s $(top_builddir)/support/htcacheclean check/bin/htcacheclean
+
+check/bin/httxt2dbm:
+	ln -s $(top_builddir)/support/httxt2dbm check/bin/httxt2dbm
+
+check/bin/a2md:
+	ln -s $(top_builddir)/support/a2md/a2md check/bin/a2md
 
 # A version of apxs with the PREFIX overridden to point inside the install root
 check/bin/apxs:
@@ -495,6 +521,9 @@ check/modules/stamp: build/config_vars.mk
 check-pytest: check-tree check/bin/apachectl check/config.ini check/modules/stamp
 	PYHTTPD_CONFIG=$(top_builddir)/check/config.ini $(PYTEST3) $(PYTEST_DIRS)
 
+check-all-pytest: check-tree check/bin/apachectl check/config.ini check/modules/stamp
+	PYHTTPD_CONFIG=$(top_builddir)/check/config.ini $(SHELL) $(top_srcdir)/test/run-all-tests.sh --apxs "$(top_builddir)/check/bin/apxs" $(PYTEST_ARGS)
+
 # Runs all configured/available test targets.
 check: $(CHECK_TARGETS)
 
@@ -530,7 +559,7 @@ test/httpdunit.lo: test/httpdunit.c test/httpdunit.cases | unittest-objdir
 # libcheck on the system.
 httpdunit_OBJECTS := test/httpdunit.lo $(testcase_OBJECTS)
 $(httpdunit_OBJECTS): override LTCFLAGS += $(UNITTEST_CFLAGS)
-test/httpdunit: $(httpdunit_OBJECTS) $(PROGRAM_DEPENDENCIES) $(PROGRAM_OBJECTS)
+test/httpdunit: $(httpdunit_OBJECTS) $(PROGRAM_DEPENDENCIES) $(PROGRAM_OBJECTS) buildmark.o
 	$(LINK) $(httpdunit_OBJECTS) $(PROGRAM_OBJECTS) $(UNITTEST_LIBS) $(PROGRAM_LDADD)
 
 check-unittests: test/httpdunit

@@ -279,7 +279,7 @@
 
     <example>
       htdbm -cbp passwords.dbm bogus bogus
-      awk ‘BEGIN { FS=”:” }; {system (“htdbm -bp passwords.dbm ” $1 ” ” $2)}’ passwords
+      awk 'BEGIN { FS=":" }; {system ("htdbm -bp passwords.dbm " $1 " " $2)}' passwords
       htdbm -x bogus
     </example>
 
@@ -321,6 +321,18 @@
 
     <p>Usernames are limited to <code>255</code> bytes and may not include the
     character <code>:</code>.</p>
+</section>
+
+<section id="files"><title>Files</title>
+
+<p>The DBM password file path is specified as an argument on the command
+line and may be located anywhere on the filesystem.</p>
+
+<dl>
+<dt><var>filename</var></dt>
+<dd>The DBM format file containing usernames and passwords.</dd>
+</dl>
+
 </section>
 
 </manualpage>

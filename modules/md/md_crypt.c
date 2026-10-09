@@ -600,10 +600,13 @@ md_pkey_spec_t *md_pkeys_spec_get(const md_pkeys_spec_t *pks, int index)
     return NULL;
 }
 
+static apr_status_t pkey_cleanup(void *data);
+
 static md_pkey_t *make_pkey(apr_pool_t *p) 
 {
     md_pkey_t *pkey = apr_pcalloc(p, sizeof(*pkey));
     pkey->pool = p;
+    apr_pool_cleanup_register(p, pkey, pkey_cleanup, apr_pool_cleanup_null);
     return pkey;
 }
 
@@ -647,7 +650,6 @@ apr_status_t md_pkey_fload(md_pkey_t **ppkey, apr_pool_t *p,
         
         if (pkey->pkey != NULL) {
             rv = APR_SUCCESS;
-            apr_pool_cleanup_register(p, pkey, pkey_cleanup, apr_pool_cleanup_null);
         }
         else {
             unsigned long err = ERR_get_error();
@@ -773,7 +775,6 @@ apr_status_t md_pkey_read_http(md_pkey_t **ppkey, apr_pool_t *pool,
         goto leave;
     }
     rv = APR_SUCCESS;
-    apr_pool_cleanup_register(pool, pkey, pkey_cleanup, apr_pool_cleanup_null);
 
 leave:
     *ppkey = (APR_SUCCESS == rv)? pkey : NULL;
@@ -1256,13 +1257,25 @@ int md_certs_are_equal(const md_cert_t *a, const md_cert_t *b)
 
 int md_cert_is_valid_now(const md_cert_t *cert)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x40000000L
+    return X509_check_certificate_times(NULL, cert->x509, NULL) == 1;
+#else
     return ((X509_cmp_current_time(X509_get_notBefore(cert->x509)) < 0)
             && (X509_cmp_current_time(X509_get_notAfter(cert->x509)) > 0));
+#endif
 }
 
 int md_cert_has_expired(const md_cert_t *cert)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x40000000L
+    /* Report expiry only (not a not-yet-valid notBefore), matching the
+     * legacy notAfter-only check below. */
+    int error = 0;
+    X509_check_certificate_times(NULL, cert->x509, &error);
+    return error == X509_V_ERR_CERT_HAS_EXPIRED;
+#else
     return (X509_cmp_current_time(X509_get_notAfter(cert->x509)) <= 0);
+#endif
 }
 
 apr_time_t md_cert_get_not_after(const md_cert_t *cert)
@@ -1725,35 +1738,49 @@ apr_status_t md_chain_fload(apr_array_header_t **pcerts, apr_pool_t *p, const ch
     return rv;
 }
 
+static apr_status_t chain_to_buffer(md_data_t *buffer, apr_array_header_t *certs,
+                                    apr_pool_t *p)
+{
+    BIO *bio = BIO_new(BIO_s_mem());
+    const md_cert_t *cert;
+    int i;
+
+    if (!bio) {
+        return APR_ENOMEM;
+    }
+
+    ERR_clear_error();
+    for (i = 0; i < certs->nelts; ++i) {
+        cert = APR_ARRAY_IDX(certs, i, const md_cert_t *);
+        assert(cert->x509);
+
+        PEM_write_bio_X509(bio, cert->x509);
+        if (ERR_get_error() > 0) {
+            BIO_free(bio);
+            return APR_EINVAL;
+        }
+    }
+
+    i = BIO_pending(bio);
+    if (i > 0) {
+        buffer->data = apr_palloc(p, (apr_size_t)i);
+        i = BIO_read(bio, (char*)buffer->data, i);
+        buffer->len = (apr_size_t)i;
+    }
+    BIO_free(bio);
+    return APR_SUCCESS;
+}
+
 apr_status_t md_chain_fsave(apr_array_header_t *certs, apr_pool_t *p, 
                             const char *fname, apr_fileperms_t perms)
 {
-    FILE *f;
+    md_data_t buffer;
     apr_status_t rv;
-    const md_cert_t *cert;
-    unsigned long err = 0;
-    int i;
-    
-    (void)p;
-    rv = md_util_fopen(&f, fname, "w");
+
+    md_data_null(&buffer);
+    rv = chain_to_buffer(&buffer, certs, p);
     if (rv == APR_SUCCESS) {
-        apr_file_perms_set(fname, perms);
-        ERR_clear_error();
-        for (i = 0; i < certs->nelts; ++i) {
-            cert = APR_ARRAY_IDX(certs, i, const md_cert_t *);
-            assert(cert->x509);
-            
-            PEM_write_X509(f, cert->x509);
-            
-            if (0 < (err = ERR_get_error())) {
-                break;
-            }
-            
-        }
-        rv = fclose(f);
-        if (err) {
-            rv = APR_EINVAL;
-        }
+        return md_util_freplace(fname, perms, p, fwrite_buffer, &buffer);
     }
     return rv;
 }
@@ -1951,6 +1978,8 @@ static apr_status_t mk_x509(X509 **px, md_pkey_t *pkey, const char *cn,
     X509_NAME *n = NULL;
     BIGNUM *big_rnd = NULL;
     ASN1_INTEGER *asn1_rnd = NULL;
+    ASN1_TIME *not_before = NULL;
+    ASN1_TIME *not_after = NULL;
     unsigned char rnd[20];
     int days;
     apr_status_t rv;
@@ -1995,10 +2024,10 @@ static apr_status_t mk_x509(X509 **px, md_pkey_t *pkey, const char *cn,
     }
     /* validity */
     days = (int)((apr_time_sec(valid_for) + MD_SECS_PER_DAY - 1)/ MD_SECS_PER_DAY);
-    if (!X509_set_notBefore(x, ASN1_TIME_set(NULL, time(NULL)))) {
-        rv = APR_EGENERAL; goto out;
-    }
-    if (!X509_set_notAfter(x, ASN1_TIME_adj(NULL, time(NULL), days, 0))) {
+    not_before = ASN1_TIME_set(NULL, time(NULL));
+    not_after = ASN1_TIME_adj(NULL, time(NULL), days, 0);
+    if (!not_before || !X509_set_notBefore(x, not_before)
+        || !not_after || !X509_set_notAfter(x, not_after)) {
         rv = APR_EGENERAL; goto out;
     }
 
@@ -2007,6 +2036,8 @@ out:
     if (APR_SUCCESS != rv && x) X509_free(x);
     if (big_rnd) BN_free(big_rnd);
     if (asn1_rnd) ASN1_INTEGER_free(asn1_rnd);
+    ASN1_TIME_free(not_before);
+    ASN1_TIME_free(not_after);
     if (n) X509_NAME_free(n);
     return rv;
 }
@@ -2226,7 +2257,9 @@ apr_status_t md_cert_get_ari_cert_id(const char **pari_cert_id,
     const ASN1_INTEGER *serial;
     BIGNUM *bn;
     int i = -1, sder_len;
-    unsigned char *ucp, sbuf[256];
+    unsigned char *ucp, *sbuf;
+
+    apr_status_t rv;
 
     *pari_cert_id = NULL;
     s_aki = X509_get_ext_d2i(cert->x509, NID_authority_key_identifier, &i, NULL);
@@ -2239,7 +2272,8 @@ apr_status_t md_cert_get_ari_cert_id(const char **pari_cert_id,
     if (aki == NULL) {
         md_log_perror(MD_LOG_MARK, MD_LOG_ERR, 0, p,
                       "cert has no authority key id in extension");
-        return APR_ENOENT;
+        rv = APR_ENOENT;
+        goto out;
     }
     akid_buf.len = (apr_size_t)ASN1_STRING_length(aki);
     akid_buf.data = (const char *)ASN1_STRING_get0_data(aki);
@@ -2249,14 +2283,22 @@ apr_status_t md_cert_get_ari_cert_id(const char **pari_cert_id,
     if (!serial) {
         md_log_perror(MD_LOG_MARK, MD_LOG_ERR, 0, p,
                       "cert has no serial number");
-        return APR_ENOENT;
+        rv = APR_ENOENT;
+        goto out;
     }
     memset(&ser_buf, 0, sizeof(ser_buf));
     bn = ASN1_INTEGER_to_BN(serial, NULL);
+    if (!bn) {
+        rv = APR_EINVAL;
+        goto out;
+    }
+    sbuf = apr_pcalloc(p, BN_num_bytes(bn));
     sder_len = BN_bn2bin(bn, sbuf);
     BN_free(bn);
-    if (sder_len < 1)
-        return APR_EINVAL;
+    if (sder_len < 1) {
+        rv = APR_EINVAL;
+        goto out;
+    }
     ser_buf.len = (apr_size_t)sder_len;
     ser_buf.data = (const char *)sbuf;
     (void)ucp;
@@ -2264,7 +2306,11 @@ apr_status_t md_cert_get_ari_cert_id(const char **pari_cert_id,
     *pari_cert_id = apr_psprintf(p, "%s.%s",
                                  md_util_base64url_encode(&akid_buf, p),
                                  md_util_base64url_encode(&ser_buf, p));
-    return APR_SUCCESS;
+    rv = APR_SUCCESS;
+
+out:
+    AUTHORITY_KEYID_free(s_aki);
+    return rv;
 #else
     *pari_cert_id = NULL;
     (void)cert;

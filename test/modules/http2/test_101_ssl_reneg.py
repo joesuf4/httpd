@@ -4,7 +4,7 @@ import pytest
 from .env import H2Conf, H2TestEnv
 
 
-@pytest.mark.skipif(condition=H2TestEnv.is_unsupported, reason="mod_http2 not supported here")
+@pytest.mark.skipif(condition=H2TestEnv.is_unsupported(), reason="mod_http2 not supported here")
 @pytest.mark.skipif(H2TestEnv.get_ssl_module() != "mod_ssl", reason="only for mod_ssl")
 class TestSslRenegotiation:
 
@@ -130,6 +130,8 @@ class TestSslRenegotiation:
     # make 10 requests on the same connection, none should produce a status code
     # reported by erki@example.ee
     def test_h2_101_05(self, env):
+        if not env.has_h2load():
+            pytest.skip("h2load not available")
         r = env.run([env.h2load, "-n", "10", "-c", "1", "-m", "1", "-vvvv",
                      f"{env.https_base_url}/ssl-client-verify/index.html"])
         assert 0 == r.exit_code

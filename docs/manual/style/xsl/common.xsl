@@ -26,7 +26,7 @@
 ]>
 <xsl:stylesheet version="1.0"
               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                  xmlns="http://www.w3.org/1999/xhtml">
+                  xmlns="">
 
 <!--                                                                      -->
 <!-- Please, don't hard-code output strings! Use the language             -->
@@ -106,8 +106,7 @@
 <xsl:template name="head">
 <head>
     &lf;
-    <meta http-equiv="Content-Type"
-          content="text/html; charset={$output-encoding}" />&lf;
+    <meta name="viewport" content="width=device-width, initial-scale=1" />&lf;
     <xsl:if test="not($is-chm or $is-zip)">
         <xsl:comment>
             &lf;
@@ -174,7 +173,7 @@
            rel="stylesheet"
            href="{$path}/style/css/manual-print.css"/>
     <link href="{$path}/style/css/prettify.css" type="text/css" rel="stylesheet" />&lf;
-    <script type="text/javascript" src="{$path}/style/scripts/prettify.min.js">&lf;</script>&lf;
+    <script src="{$path}/style/scripts/prettify.min.js">&lf;</script>&lf;
     <!-- chm files do not need a favicon -->
     <xsl:if test="not($is-chm or $is-zip)">&lf;
         <link rel="shortcut icon" href="{$path}/images/favicon.png" />
@@ -228,7 +227,7 @@
 </div>&lf;
 
 <div id="path">&lf;
-    <a href="http://www.apache.org/">
+    <a href="https://www.apache.org/">
         <xsl:if test="$ext-target">
             <xsl:attribute name="target">_blank</xsl:attribute>
         </xsl:if>
@@ -237,7 +236,7 @@
 
     <xsl:text> &gt; </xsl:text>
 
-    <a href="http://httpd.apache.org/">
+    <a href="https://httpd.apache.org/">
         <xsl:if test="$ext-target">
             <xsl:attribute name="target">_blank</xsl:attribute>
         </xsl:if>
@@ -246,7 +245,7 @@
 
     <xsl:text> &gt; </xsl:text>
 
-    <a href="http://httpd.apache.org/docs/">
+    <a href="https://httpd.apache.org/docs/">
         <xsl:if test="$ext-target">
             <xsl:attribute name="target">_blank</xsl:attribute>
         </xsl:if>
@@ -401,7 +400,7 @@
             <xsl:text> </xsl:text>
         </xsl:if>
 
-        <a href="http://www.apache.org/licenses/LICENSE-2.0">
+        <a href="https://www.apache.org/licenses/LICENSE-2.0">
             <xsl:if test="$ext-target">
                 <xsl:attribute name="target">_blank</xsl:attribute>
             </xsl:if>
@@ -418,10 +417,31 @@
 
 </div> <!-- /footer -->
 
-<script type="text/javascript">
+<script>
 <xsl:text disable-output-escaping="yes"><![CDATA[<!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
+}
+var langToggle = document.querySelector('.lang-toggle');
+var topLang = document.querySelector('.toplang');
+if (langToggle && topLang) {
+    langToggle.addEventListener('click', function() { topLang.classList.toggle('open'); });
+}
+var qv = document.getElementById('quickview');
+if (qv) {
+    document.body.appendChild(qv);
+    var qvBtn = document.createElement('button');
+    qvBtn.className = 'qv-toggle';
+    qvBtn.setAttribute('aria-label', 'Toggle page navigation');
+    qvBtn.innerHTML = '&#9776;';
+    document.body.appendChild(qvBtn);
+    qvBtn.addEventListener('click', function() {
+        var isOpen = qv.classList.toggle('open');
+        if (isOpen) {
+            qv.style.top = window.scrollY + 10 + 'px';
+        }
+    });
+    window.addEventListener('scroll', function() { qv.classList.remove('open'); });
 }
 //--><!]]]]>></xsl:text></script>
 </xsl:template>
@@ -435,6 +455,7 @@ if (typeof(prettyPrint) !== 'undefined') {
 <xsl:param name="position" select="'top'" />
 
 <xsl:if test="not($is-chm or $is-zip)">
+<xsl:if test="$position = 'top'"><button class="lang-toggle" aria-label="Toggle language list"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>&lf;</xsl:if>
 <div class="{$position}lang">&lf;
     <p>
         <span>
@@ -496,9 +517,8 @@ if (typeof(prettyPrint) !== 'undefined') {
     <h2>
         <xsl:choose>
         <xsl:when test="@id">
-          <a id="{@id}" name="{@id}">
-              <xsl:apply-templates select="title" mode="print" />
-          </a>
+          <xsl:attribute name="id"><xsl:value-of select="@id" /></xsl:attribute>
+          <xsl:apply-templates select="title" mode="print" />
           <xsl:text> </xsl:text>
           <a class="permalink" href="#{@id}" title="{$message[@id='permalink']}">&para;</a>
         </xsl:when>
@@ -524,9 +544,8 @@ if (typeof(prettyPrint) !== 'undefined') {
 <h3>
     <xsl:choose>
     <xsl:when test="@id">
-        <a id="{@id}" name="{@id}">
-            <xsl:apply-templates select="title" mode="print" />
-        </a>
+        <xsl:attribute name="id"><xsl:value-of select="@id" /></xsl:attribute>
+        <xsl:apply-templates select="title" mode="print" />
     </xsl:when>
 
     <xsl:otherwise>
@@ -1241,6 +1260,10 @@ if (typeof(prettyPrint) !== 'undefined') {
     <xsl:if test="@section">
       <xsl:text>#section-</xsl:text>
       <xsl:value-of select="@section"/>
+    </xsl:if>
+    <xsl:if test="@anchor">
+      <xsl:text>#</xsl:text>
+      <xsl:value-of select="@anchor"/>
     </xsl:if>
   </xsl:variable>
 

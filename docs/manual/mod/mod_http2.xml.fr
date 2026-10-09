@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE modulesynopsis SYSTEM "../style/modulesynopsis.dtd">
 <?xml-stylesheet type="text/xsl" href="../style/manual.fr.xsl"?>
-<!-- English Revision: 1933057:1933502 (outdated) -->
+<!-- English Revision: 1933858 -->
 <!-- French translation : Lucien GENTIS -->
 
 <!--
@@ -32,8 +32,7 @@
     HTTP Apache</compatibility>
 
     <summary>
-	<p>Ce module ajoute le support de HTTP/2 (<a
-	href="https://tools.ietf.org/html/rfc7540">RFC 7540</a>) au serveur HTTP
+	<p>Ce module ajoute la prise en charge de HTTP/2 (<rfc>7540</rfc>) au serveur HTTP
 	Apache.</p>
 
         <p>Il s'appuie sur la bibliothèque <a
@@ -319,8 +318,8 @@ Protocols h2 h2c http/1.1
             <p>
                 Les server pushes sont détectés en inspectant les
 		en-têtes <code>Link</code> des réponses (voir
-		https://tools.ietf.org/html/rfc5988 pour la
-		spécification). Lorsqu'un lien spécifié de cette manière
+		<rfc>8288</rfc> pour la
+		spécification des liens du web). Lorsqu'un lien spécifié de cette manière
 		possède l'attribut <code>rel=preload</code>, il est
 		considéré comme devant faire l'objet d'un push.
             </p>
@@ -1315,7 +1314,7 @@ H2EarlyHint Link "&lt;/my.css&gt;;rel=preload;as=style"
 
     <directivesynopsis>
         <name>H2MaxHeaderBlockLen</name>
-        <description>Taille maximale des en-têtes d’une réponse</description>
+        <description>Taille maximale des en-têtes d'une réponse</description>
         <syntax>H2MaxHeaderBlockLen <var>n</var></syntax>
         <default>H2MaxHeaderBlockLen 0</default>
         <contextlist>
@@ -1328,7 +1327,7 @@ H2EarlyHint Link "&lt;/my.css&gt;;rel=preload;as=style"
         <usage>
             <p>
                 La directive <directive>H2MaxHeaderBlockLen</directive> permet
-		de définir la taille maximale globale des en-têtes d’une
+		de définir la taille maximale globale des en-têtes d'une
 		réponse. Définir cette directive à&nbsp;0 implique une taille maximale
 		de&nbsp;64 ko dans nghttp2, ce qui correspond à la valeur par défaut.
             </p>
@@ -1342,7 +1341,7 @@ H2EarlyHint Link "&lt;/my.css&gt;;rel=preload;as=style"
 
         <directivesynopsis>
         <name>H2MaxStreamErrors</name>
-        <description>Nombre maximal toléré d’erreurs dues au client</description>
+        <description>Nombre maximal toléré d'erreurs dues au client</description>
         <syntax>H2MaxStreamErrors <var>n</var></syntax>
         <default>H2MaxStreamErrors 8</default>
         <contextlist>
@@ -1355,17 +1354,17 @@ H2EarlyHint Link "&lt;/my.css&gt;;rel=preload;as=style"
         <usage>
             <p>
 		La directive <directive>H2MaxStreamErrors</directive> permet de
-		définir le nombre maximal toléré d’erreurs de flux HTTP/2
+		définir le nombre maximal toléré d'erreurs de flux HTTP/2
 		causées par le client. Si cette limite est dépassée, la
 		connexion sera fermée. Les erreurs de flux sont des violations
 		du protocole sur un flux HTTP/2 individuel pour lesquelles la
-		spécification du protocole n’exige pas de fermeture de la
-		connexion, mais qui peuvent être un signe d’activité
+		spécification du protocole n'exige pas de fermeture de la
+		connexion, mais qui peuvent être un signe d'activité
 		malveillante de la part du client.
             </p>
             <p>
-                Définissez cette directive à 0 pour vous prémunir contre les
-		clients qui provoquent des erreurs.
+                Définissez cette directive à 0 pour tolérer les clients
+			défaillants.
             </p>
         </usage>
     </directivesynopsis>

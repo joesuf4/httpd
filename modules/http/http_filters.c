@@ -414,7 +414,7 @@ apr_status_t ap_http_filter(ap_filter_t *f, apr_bucket_brigade *b,
                 }
                 apr_bucket_delete(e);
             }
-            if (APR_BUCKET_IS_EOS(e)) {
+            else if (APR_BUCKET_IS_EOS(e)) {
                 ctx->at_eos = 1;
                 if (!apr_is_empty_table(r->trailers_in)) {
                     core_server_config *conf = ap_get_module_config(
@@ -978,7 +978,7 @@ static apr_status_t validate_status_line(request_rec *r)
         if (len < 3
             || apr_strtoi64(r->status_line, &end, 10) != r->status
             || (end - 3) != r->status_line
-            || (len >= 4 && ! apr_isspace(r->status_line[3]))) {
+            || (len >= 4 && r->status_line[3] != ' ')) {
             r->status_line = NULL;
             return APR_EGENERAL;
         }
@@ -1216,7 +1216,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
                     respb = e;
                     resp = respb->data;
                     if (!ctx->final_status
-                        && (resp->status >= 200 || resp->status == HTTP_SWITCHING_PROTOCOLS)) {
+                        && (resp->status >= HTTP_OK || resp->status == HTTP_SWITCHING_PROTOCOLS)) {
                         ctx->final_status = resp->status;
                         ctx->final_header_only = AP_STATUS_IS_HEADER_ONLY(resp->status);
                         bcontent = APR_BUCKET_NEXT(e);
@@ -1899,7 +1899,7 @@ static void h1_append_response_head(request_rec *r,
 }
 
 typedef struct h1_response_ctx {
-    int final_response_sent;    /* strict: a response status >= 200 was sent */
+    int final_response_sent;    /* strict: a response status >= HTTP_OK was sent */
     int discard_body;           /* the response is header only, discard body */
     apr_bucket_brigade *tmpbb;
 } h1_response_ctx;
@@ -1942,7 +1942,7 @@ apr_status_t ap_h1_response_out_filter(ap_filter_t *f,
                 ap_log_rerror(APLOG_MARK, APLOG_TRACE2, 0, r,
                               "ap_h1_response_out_filter seeing response bucket status=%d",
                               resp->status);
-                if (strict && resp->status < 100) {
+                if (strict && resp->status < HTTP_CONTINUE) {
                     /* error, not a valid http status */
                     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(10386)
                                   "ap_h1_response_out_filter seeing headers "
@@ -1966,8 +1966,8 @@ apr_status_t ap_h1_response_out_filter(ap_filter_t *f,
                      */
                     const char *proto = AP_SERVER_PROTOCOL;
 
-                    ctx->final_response_sent = (resp->status >= 200)
-                        || (!strict && resp->status < 100);
+                    ctx->final_response_sent = (resp->status >= HTTP_OK)
+                        || (!strict && resp->status < HTTP_CONTINUE);
                     ctx->discard_body = ctx->final_response_sent &&
                         (r->header_only || AP_STATUS_IS_HEADER_ONLY(resp->status));
 
@@ -2135,10 +2135,10 @@ static void merge_response_headers(request_rec *r)
     if (!apr_is_empty_array(r->content_languages)) {
         int i;
         char *token;
-        char **languages = (char **)(r->content_languages->elts);
         const char *field = apr_table_get(r->headers_out, "Content-Language");
 
         while (field && (token = ap_get_list_item(r->pool, &field)) != NULL) {
+            char **languages = (char **)(r->content_languages->elts);
             for (i = 0; i < r->content_languages->nelts; ++i) {
                 if (!ap_cstr_casecmp(token, languages[i]))
                     break;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE modulesynopsis SYSTEM "../style/modulesynopsis.dtd">
 <?xml-stylesheet type="text/xsl" href="../style/manual.fr.xsl"?>
-<!-- English Revision: 1933058 -->
+<!-- English Revision: 1934245 -->
 <!-- French translation : Lucien GENTIS -->
 <!-- Reviewed by : Vincent Deffontaines -->
 
@@ -385,7 +385,7 @@ end
           <td>string</td>
           <td>oui</td>
 	  <td>Si une authentification a été effectuée, ce champ prend pour
-	  valeur le type d’authentification (par exemple <code>basic</code>)</td>
+	  valeur le type d'authentification (par exemple <code>basic</code>)</td>
         </tr>
         <tr>
           <td><code>args</code></td>
@@ -572,7 +572,8 @@ end
           <td><code>path_info</code></td>
           <td>string</td>
           <td>non</td>
-	  <td>La valeur de PATH_INFO extraite de la requête.</td>
+	  <td>La valeur de <glossary ref="pathinfo">PATH_INFO</glossary>
+	  extraite de la requête.</td>
         </tr>
         <tr>
           <td><code>port</code></td>

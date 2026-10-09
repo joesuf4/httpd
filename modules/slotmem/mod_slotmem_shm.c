@@ -72,6 +72,48 @@ struct ap_slotmem_instance_t {
 static struct ap_slotmem_instance_t *globallistmem = NULL;
 static apr_pool_t *gpool = NULL;
 
+static apr_status_t slotmem_layout_sizes(apr_size_t item_size,
+                                         unsigned int item_num,
+                                         apr_size_t *basesize,
+                                         apr_size_t *persistsize,
+                                         apr_size_t *totalsize)
+{
+    apr_size_t slotdata;
+    apr_size_t persist;
+    apr_size_t total;
+
+    if (item_num && item_size > APR_SIZE_MAX / item_num) {
+        return APR_EINVAL;
+    }
+    slotdata = item_size * item_num;
+
+    if (APR_SIZE_MAX - AP_UNSIGNEDINT_OFFSET < (apr_size_t)item_num) {
+        return APR_EINVAL;
+    }
+    persist = AP_UNSIGNEDINT_OFFSET + item_num;
+
+    if (APR_SIZE_MAX - persist < slotdata) {
+        return APR_EINVAL;
+    }
+    persist += slotdata;
+
+    if (APR_SIZE_MAX - AP_SLOTMEM_OFFSET < persist) {
+        return APR_EINVAL;
+    }
+    total = AP_SLOTMEM_OFFSET + persist;
+
+    if (basesize) {
+        *basesize = slotdata;
+    }
+    if (persistsize) {
+        *persistsize = persist;
+    }
+    if (totalsize) {
+        *totalsize = total;
+    }
+    return APR_SUCCESS;
+}
+
 #define DEFAULT_SLOTMEM_PREFIX "slotmem-shm-"
 #define DEFAULT_SLOTMEM_SUFFIX ".shm"
 #define DEFAULT_SLOTMEM_PERSIST_SUFFIX ".persist"
@@ -175,8 +217,13 @@ static void store_slotmem(ap_slotmem_instance_t *slotmem)
         if (AP_SLOTMEM_IS_CLEARINUSE(slotmem)) {
             slotmem_clearinuse(slotmem);
         }
-        nbytes = (slotmem->desc->size * slotmem->desc->num) +
-                 (slotmem->desc->num * sizeof(char)) + AP_UNSIGNEDINT_OFFSET;
+        rv = slotmem_layout_sizes(slotmem->desc->size, slotmem->desc->num,
+                                  NULL, &nbytes, NULL);
+        if (rv != APR_SUCCESS) {
+            apr_file_close(fp);
+            apr_file_remove(storename, slotmem->gpool);
+            return;
+        }
         apr_md5(digest, slotmem->persist, nbytes);
         rv = apr_file_write_full(fp, slotmem->persist, nbytes, NULL);
         if (rv == APR_SUCCESS) {
@@ -348,15 +395,18 @@ static apr_status_t slotmem_create(ap_slotmem_instance_t **new,
     ap_slotmem_instance_t *next = globallistmem;
     const char *fname, *pname = NULL;
     apr_shm_t *shm;
-    apr_size_t basesize = (item_size * item_num);
-    apr_size_t size = AP_SLOTMEM_OFFSET + AP_UNSIGNEDINT_OFFSET +
-                      (item_num * sizeof(char)) + basesize;
+    apr_size_t basesize;
+    apr_size_t size;
     int persist = (type & AP_SLOTMEM_TYPE_PERSIST) != 0;
     apr_status_t rv;
 
     *new = NULL;
     if (gpool == NULL) {
         return APR_ENOSHMAVAIL;
+    }
+    rv = slotmem_layout_sizes(item_size, item_num, &basesize, NULL, &size);
+    if (rv != APR_SUCCESS) {
+        return rv;
     }
     if (slotmem_filenames(pool, name, &fname, persist ? &pname : NULL)) {
         /* first try to attach to existing slotmem */
@@ -483,6 +533,8 @@ static apr_status_t slotmem_attach(ap_slotmem_instance_t **new,
     sharedslotdesc_t *desc;
     const char *fname;
     apr_shm_t *shm;
+    apr_size_t basesize;
+    apr_size_t expected_size;
     apr_status_t rv;
 
     if (gpool == NULL) {
@@ -524,6 +576,14 @@ static apr_status_t slotmem_attach(ap_slotmem_instance_t **new,
 
     /* Read the description of the slotmem */
     desc = (sharedslotdesc_t *)apr_shm_baseaddr_get(shm);
+
+    rv = slotmem_layout_sizes(desc->size, desc->num,
+                              &basesize, NULL, &expected_size);
+    if (rv != APR_SUCCESS || apr_shm_size_get(shm) < expected_size) {
+        apr_shm_detach(shm);
+        return APR_EINVAL;
+    }
+
     ptr = (char *)desc + AP_SLOTMEM_OFFSET;
 
     /* For the chained slotmem stuff */
@@ -537,7 +597,7 @@ static apr_status_t slotmem_attach(ap_slotmem_instance_t **new,
     res->base = (void *)ptr;
     res->desc = desc;
     res->gpool = gpool;
-    res->inuse = ptr + (desc->size * desc->num);
+    res->inuse = ptr + basesize;
     res->next = NULL;
 
     *new = res;
@@ -562,6 +622,11 @@ static apr_status_t slotmem_dptr(ap_slotmem_instance_t *slot,
         return APR_EINVAL;
     }
 
+    if (slot->desc->size != 0
+            && (apr_size_t)id > ((apr_size_t)-1) / slot->desc->size) {
+        return APR_EINVAL;
+    }
+
     ptr = (char *)slot->base + slot->desc->size * id;
     if (!ptr) {
         return APR_ENOSHMAVAIL;
@@ -580,11 +645,14 @@ static apr_status_t slotmem_get(ap_slotmem_instance_t *slot, unsigned int id,
     if (!slot) {
         return APR_ENOSHMAVAIL;
     }
-
-    inuse = slot->inuse + id;
     if (id >= slot->desc->num) {
         return APR_EINVAL;
     }
+    if (dest_len > slot->desc->size || (dest_len && !dest)) {
+        return APR_EINVAL;
+    }
+
+    inuse = slot->inuse + id;
     if (AP_SLOTMEM_IS_PREGRAB(slot) && !*inuse) {
         return APR_NOTFOUND;
     }
@@ -593,7 +661,9 @@ static apr_status_t slotmem_get(ap_slotmem_instance_t *slot, unsigned int id,
         return ret;
     }
     *inuse = 1;
-    memcpy(dest, ptr, dest_len); /* bounds check? */
+    if (dest_len) {
+        memcpy(dest, ptr, dest_len);
+    }
     return APR_SUCCESS;
 }
 
@@ -607,11 +677,14 @@ static apr_status_t slotmem_put(ap_slotmem_instance_t *slot, unsigned int id,
     if (!slot) {
         return APR_ENOSHMAVAIL;
     }
-
-    inuse = slot->inuse + id;
     if (id >= slot->desc->num) {
         return APR_EINVAL;
     }
+    if (src_len > slot->desc->size || (src_len && !src)) {
+        return APR_EINVAL;
+    }
+
+    inuse = slot->inuse + id;
     if (AP_SLOTMEM_IS_PREGRAB(slot) && !*inuse) {
         return APR_NOTFOUND;
     }
@@ -620,7 +693,9 @@ static apr_status_t slotmem_put(ap_slotmem_instance_t *slot, unsigned int id,
         return ret;
     }
     *inuse=1;
-    memcpy(ptr, src, src_len); /* bounds check? */
+    if (src_len) {
+        memcpy(ptr, src, src_len);
+    }
     return APR_SUCCESS;
 }
 
@@ -706,6 +781,7 @@ static apr_status_t slotmem_release(ap_slotmem_instance_t *slot,
                                     unsigned int id)
 {
     char *inuse;
+    int inuse_val;
 
     if (!slot) {
         return APR_ENOSHMAVAIL;
@@ -713,11 +789,13 @@ static apr_status_t slotmem_release(ap_slotmem_instance_t *slot,
 
     inuse = slot->inuse;
 
-    if (id >= slot->desc->num || !inuse[id] ) {
+    inuse_val = (id < slot->desc->num) ? (int)inuse[id] : -1;
+
+    if (id >= slot->desc->num || !inuse_val) {
         ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf, APLOGNO(02294)
                      "slotmem(%s) release failed. Num %u/inuse[%u] %d",
                      slot->name, slotmem_num_slots(slot),
-                     id, (int)inuse[id]);
+                     id, inuse_val);
         if (id >= slot->desc->num) {
             return APR_EINVAL;
         } else {

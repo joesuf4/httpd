@@ -590,6 +590,36 @@ DAV_DECLARE(time_t) dav_get_timeout_string(request_rec *r,
     return DAV_TIMEOUT_INFINITE;
 }
 
+DAV_DECLARE(dav_error *) dav_parse_locktoken(apr_pool_t *p,
+                                             const char *input,
+                                             char **output)
+{
+    char *token;
+    apr_size_t len;
+    int has_open;
+    int has_close;
+
+    *output = NULL;
+
+    len = strlen(input);
+    has_open = (len > 0 && input[0] == '<');
+    has_close = (len > 2 && input[len - 1] == '>');
+
+    if (len < 2 || !has_open || !has_close) {
+        return dav_new_error(p, HTTP_BAD_REQUEST, 0, 0,
+                             "Malformed Lock-Token");
+    }
+
+    token = apr_pstrmemdup(p, input + 1, len - 2);
+    if (*token == '\0') {
+        return dav_new_error(p, HTTP_BAD_REQUEST, 0, 0,
+                             "Malformed Lock-Token");
+    }
+
+    *output = token;
+    return NULL;
+}
+
 /* ---------------------------------------------------------------
 **
 ** If Header processing
@@ -1012,6 +1042,8 @@ static dav_error * dav_validate_resource_state(apr_pool_t *p,
         seen_locktoken = 1;
     }
     else if (flags & DAV_LOCKSCOPE_SHARED) {
+        unsigned count = 0;
+
         /*
         ** Strictly speaking, we don't need this loop. Either the first
         ** (and only) lock will be EXCLUSIVE, or none of them will be.
@@ -1021,6 +1053,13 @@ static dav_error * dav_validate_resource_state(apr_pool_t *p,
                 return dav_new_error(p, HTTP_LOCKED, 0, 0,
                                      "The requested resource is already "
                                      "locked exclusively.");
+            }
+            /* Impose a maximum count of shared locks since the lock
+             * list is used in a linear-cost scan in many places. */
+            else if (count++ > DAV_MAX_SHARED_LOCKS) {
+                return dav_new_error(p, HTTP_FORBIDDEN, 0, 0,
+                                     "The maximum shared lock count has "
+                                     "been reached.");
             }
         }
 

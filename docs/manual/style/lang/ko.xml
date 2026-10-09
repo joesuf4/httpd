@@ -96,6 +96,8 @@
         <message id="experimental" letter="X">Experimental</message>
         <message id="external" letter="T">External</message>
 
+        <message id="deprecated" letter="D">사용 중단됨</message>
+
         <!-- Used in directive context lists -->
         <message id="serverconfig" letter="s">주서버설정</message>
         <message id="virtualhost" letter="v">가상호스트</message>

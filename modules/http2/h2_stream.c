@@ -559,9 +559,15 @@ static apr_status_t stream_pool_destroy(void *data)
     h2_stream *stream = data;
     switch (stream->magic) {
     case H2_STRM_MAGIC_OK:
-        ap_log_cerror(APLOG_MARK, APLOG_ERR, 0, stream->session->c1,
-                      H2_STRM_MSG(stream, "was not destroyed explicitly"));
-        AP_DEBUG_ASSERT(0);
+        /* Reclaimed with the session pool rather than destroyed
+         * explicitly.  This is expected for a stream which was created
+         * but never scheduled for processing - e.g. one whose request
+         * nghttp2 rejects before it is handed to the mplx - and is
+         * harmless, since nothing but the session pool ever owned it.
+         * Use-after-free of a stream is still caught in any build by the
+         * H2_STRM_ASSERT_MAGIC at each use. */
+        ap_log_cerror(APLOG_MARK, APLOG_TRACE1, 0, stream->session->c1,
+                      H2_STRM_MSG(stream, "reclaimed, never processed"));
         break;
     case H2_STRM_MAGIC_SDEL:
         /* stream has been explicitly destroyed, as it should */
@@ -757,7 +763,7 @@ apr_status_t h2_stream_add_header(h2_stream *stream,
     if (name[0] == ':') {
         if (vlen > APR_INT32_MAX || (int)vlen > session->s->limit_req_line) {
             /* pseudo header: approximation of request line size check */
-            if (!h2_stream_is_ready(stream)) {
+            if (!stream->request_headers_failed) {
                 ap_log_cerror(APLOG_MARK, APLOG_INFO, 0, session->c1,
                               H2_STRM_LOG(APLOGNO(10178), stream,
                                           "Request pseudo header exceeds "
@@ -804,7 +810,7 @@ apr_status_t h2_stream_add_header(h2_stream *stream,
     
     if (APR_EINVAL == status) {
         /* header too long */
-        if (!h2_stream_is_ready(stream) && !stream->request_headers_failed) {
+        if (!stream->request_headers_failed) {
             ap_log_cerror(APLOG_MARK, APLOG_INFO, 0, session->c1,
                           H2_STRM_LOG(APLOGNO(10180), stream,
                           "Request header exceeds LimitRequestFieldSize(%d): %.*s"),
@@ -823,7 +829,7 @@ apr_status_t h2_stream_add_header(h2_stream *stream,
             h2_stream_rst(stream, H2_ERR_ENHANCE_YOUR_CALM);
             return APR_ECONNRESET;
         }
-        if (!h2_stream_is_ready(stream)) {
+        if (!stream->request_headers_failed) {
             ap_log_cerror(APLOG_MARK, APLOG_INFO, 0, session->c1,
                           H2_STRM_LOG(APLOGNO(10181), stream, "Number of request headers "
                                       "exceeds LimitRequestFields(%d)"),
@@ -883,7 +889,7 @@ apr_status_t h2_stream_end_headers(h2_stream *stream, int eos, size_t raw_bytes)
     ctx.failed_key = NULL;
     apr_table_do(table_check_val_len, &ctx, req->headers, NULL);
     if (ctx.failed_key) {
-        if (!h2_stream_is_ready(stream)) {
+        if (!stream->request_headers_failed) {
             ap_log_cerror(APLOG_MARK, APLOG_INFO, 0, stream->session->c1,
                           H2_STRM_LOG(APLOGNO(10230), stream,"Request header exceeds "
                                       "LimitRequestFieldSize: %.*s"),
@@ -963,10 +969,13 @@ apr_status_t h2_stream_end_headers(h2_stream *stream, int eos, size_t raw_bytes)
         }
     }
 
-    if (req->scheme && (req->path && req->path[0] != '/')) {
+    if (req->scheme && (req->path && req->path[0] != '/')
+        && !(is_http_or_https && !strcmp(req->path, "*")
+             && !strcmp(req->method, "OPTIONS"))) {
         /* We still have a scheme, which means we need to pass an absolute URI into
          * our HTTP protocol handling and the missing '/' at the start will prevent
-         * us from doing so (as it then confuses path and authority). */
+         * us from doing so (as it then confuses path and authority).
+         * The asterisk-form of OPTIONS is no URI path and passed as is. */
         ap_log_cerror(APLOG_MARK, APLOG_INFO, 0, stream->session->c1,
                       H2_STRM_LOG(APLOGNO(10379), stream, "Request :scheme '%s' and "
                       "path '%s' do not allow creating an absolute URL. Failing "
@@ -1022,10 +1031,10 @@ static void stream_do_error_bucket(h2_stream *stream, apr_bucket *b)
     int err = ((ap_bucket_error *)(b->data))->status;
     ap_log_cerror(APLOG_MARK, APLOG_TRACE1, 0, stream->session->c1,
                   H2_STRM_MSG(stream, "error bucket received, err=%d"), err);
-    if (err >= 500) {
+    if (err >= HTTP_INTERNAL_SERVER_ERROR) {
         err = NGHTTP2_INTERNAL_ERROR;
     }
-    else if (err >= 400) {
+    else if (err >= HTTP_BAD_REQUEST) {
         err = NGHTTP2_STREAM_CLOSED;
     }
     else {
@@ -1649,7 +1658,7 @@ static apr_status_t stream_do_response(h2_stream *stream)
         goto cleanup;
     }
 
-    if (resp->status < 100) {
+    if (resp->status < HTTP_CONTINUE) {
         h2_stream_rst(stream, resp->status);
         goto cleanup;
     }
@@ -1691,8 +1700,8 @@ static apr_status_t stream_do_response(h2_stream *stream)
         && !stream->response
         && stream->request && stream->request->method
         && !strcmp("GET", stream->request->method)
-        && (resp->status < 400)
-        && (resp->status != 304)
+        && (resp->status < HTTP_BAD_REQUEST)
+        && (resp->status != HTTP_NOT_MODIFIED)
         && h2_session_push_enabled(stream->session)) {
         /* PUSH is possible and enabled on server, unless the request
          * denies it, submit resources to push */
@@ -1709,14 +1718,18 @@ static apr_status_t stream_do_response(h2_stream *stream)
     }
     h2_session_set_prio(stream->session, stream, stream->pref_priority);
 
+#ifdef HTTP_EARLY_HINTS
+    if (resp->status == HTTP_EARLY_HINTS
+#else
     if (resp->status == 103
+#endif
         && !h2_config_sgeti(stream->session->s, H2_CONF_EARLY_HINTS)) {
         /* suppress sending this to the client, it might have triggered
          * pushes and served its purpose nevertheless */
         rv = APR_SUCCESS;
         goto cleanup;
     }
-    if (resp->status >= 200) {
+    if (resp->status >= HTTP_OK) {
         stream->response = resp;
     }
 

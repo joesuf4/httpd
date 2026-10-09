@@ -17,7 +17,7 @@
 
 # CMAKE_MINIMUM_REQUIRED should be the first directive in the file:
 # https://cmake.org/cmake/help/latest/command/cmake_minimum_required.html
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16...3.29)
 
 PROJECT(HTTPD C)
 
@@ -337,7 +337,6 @@ SET(MODULE_LIST
   "modules/core/mod_watchdog+I+Watchdog module"
   "modules/database/mod_dbd+I+Apache DBD Framework"
   "modules/dav/fs/mod_dav_fs+I+DAV provider for the filesystem."
-  "modules/dav/lock/mod_dav_lock+I+DAV provider for generic locking"
   "modules/dav/main/mod_dav+I+WebDAV protocol handling."
   "modules/debugging/mod_bucketeer+O+buckets manipulation filter.  Useful only for developers and testing purposes."
   "modules/debugging/mod_dumpio+I+I/O dump filter"
@@ -391,7 +390,7 @@ SET(MODULE_LIST
   "modules/metadata/mod_expires+I+Expires header control"
   "modules/metadata/mod_headers+A+HTTP header control"
   "modules/metadata/mod_ident+O+RFC 1413 identity check"
-  "modules/metadata/mod_mime_magic+O+automagically determining MIME type"
+  "modules/metadata/mod_mime_magic+I+automagically determining MIME type"
   "modules/metadata/mod_remoteip+I+translate header contents to an apparent client remote_ip"
   "modules/metadata/mod_setenvif+A+basing ENV vars on headers"
   "modules/metadata/mod_unique_id+I+per-request unique ids"
@@ -411,6 +410,7 @@ SET(MODULE_LIST
   "modules/proxy/mod_proxy_hcheck+I+Apache proxy Health check module.  Requires and is enabled by --enable-proxy."
   "modules/proxy/mod_proxy_http+I+Apache proxy HTTP module.  Requires and is enabled by --enable-proxy."
   "modules/proxy/mod_proxy_scgi+I+Apache proxy SCGI module.  Requires and is enabled by --enable-proxy."
+  "modules/proxy/mod_proxy_uwsgi+I+Apache proxy SCGI module.  Requires and is enabled by --enable-proxy."
   "modules/proxy/mod_proxy_wstunnel+I+Apache proxy Websocket Tunnel module.  Requires and is enabled by --enable-proxy."
   "modules/http2/mod_proxy_http2+i+Apache proxy HTTP/2 module.  Requires --enable-proxy."
   "modules/proxy/mod_serf+O+Reverse proxy module using Serf"
@@ -429,6 +429,70 @@ SET(MODULE_LIST
   "modules/test/mod_optional_hook_import+O+example optional hook importer"
   "modules/test/mod_policy+I+HTTP protocol compliance filters"
 )
+
+IF(BUILD_TEST_MODULES)
+  LIST(APPEND MODULE_LIST
+    "test/pyhttpd/mod_aptest/mod_aptest+A+Test module. Useful only for developers and testing purposes."
+    "test/modules/http1/mod_h1test/mod_h1test+A+Http/1 Test module. Useful only for developers and testing purposes."
+    "test/modules/http2/mod_h2test/mod_h2test+A+Http/2 Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/authany/mod_authany+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/client_add_filter/mod_client_add_filter+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/eat_post/mod_eat_post+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/echo_post/mod_echo_post+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/echo_post_chunk/mod_echo_post_chunk+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/fold/mod_fold+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/input_body_filter/mod_input_body_filter+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/list_modules/mod_list_modules+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/memory_track/mod_memory_track+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/nntp_like/mod_nntp_like+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/random_chunk/mod_random_chunk+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/test_apr_uri/mod_test_apr_uri+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/test_pass_brigade/mod_test_pass_brigade+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/test_rwrite/mod_test_rwrite+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/test_session/mod_test_session+A+Test module. Useful only for developers and testing purposes."
+    "test/pytest_suite/c-modules/test_utilities/mod_test_utilities+A+Test module. Useful only for developers and testing purposes."
+  )
+ENDIF()
+IF(BUILD_TEST_MODULES AND OPENSSL_FOUND)
+  LIST(APPEND MODULE_LIST
+    "test/pytest_suite/c-modules/test_ssl/mod_test_ssl+A+Test module. Useful only for developers and testing purposes."
+  )
+ENDIF()
+
+IF(BUILD_TEST_MODULES)
+  SET(PYTEST_CMODULES_DIR "${CMAKE_SOURCE_DIR}/test/pytest_suite/c-modules")
+  IF(WIN32)
+    file(GLOB _python_hints "$ENV{LOCALAPPDATA}/Programs/Python/Python3*"
+                            "$ENV{PROGRAMFILES}/Python3*")
+    find_program(PYTHON_EXE NAMES py python3 python
+      HINTS ${_python_hints}
+    )
+    IF(NOT PYTHON_EXE)
+      MESSAGE(FATAL_ERROR "Python interpreter not found, required for BUILD_TEST_MODULES")
+    ENDIF()
+    execute_process(
+      COMMAND "${PYTHON_EXE}" "${CMAKE_SOURCE_DIR}/test/pytest_suite/gen_test_header.py" "${PYTEST_CMODULES_DIR}/apache_httpd_test.h"
+      RESULT_VARIABLE _gen_header_rc
+    )
+    IF(NOT _gen_header_rc EQUAL 0)
+      MESSAGE(FATAL_ERROR "Failed to generate apache_httpd_test.h (exit ${_gen_header_rc})")
+    ENDIF()
+  ENDIF()
+  SET(PYTEST_CMODULE_DEFINES APACHE2 APACHE2_4)
+  FOREACH(pytest_mod
+      mod_authany mod_client_add_filter mod_eat_post mod_echo_post
+      mod_echo_post_chunk mod_fold mod_input_body_filter mod_list_modules
+      mod_memory_track mod_nntp_like mod_random_chunk mod_test_apr_uri
+      mod_test_pass_brigade mod_test_rwrite mod_test_session
+      mod_test_utilities mod_test_ssl)
+    SET(${pytest_mod}_extra_defines ${PYTEST_CMODULE_DEFINES})
+  ENDFOREACH()
+  SET(mod_test_session_extra_libs mod_session)
+  # Enable httpd debugging/example modules needed by the test suite.
+  SET(ENABLE_BUCKETEER "A" CACHE STRING "buckets manipulation filter" FORCE)
+  SET(ENABLE_CASE_FILTER "A" CACHE STRING "Example uppercase conversion filter" FORCE)
+  SET(ENABLE_CASE_FILTER_IN "A" CACHE STRING "Example uppercase conversion input filter" FORCE)
+ENDIF()
 
 # Track which modules actually built have APIs to link against.
 SET(installed_mod_libs_exps)
@@ -460,8 +524,6 @@ SET(mod_dav_fs_extra_sources
   modules/dav/fs/quota.c             modules/dav/fs/repos.c
 )
 SET(mod_dav_fs_extra_libs            mod_dav)
-SET(mod_dav_lock_extra_sources       modules/dav/lock/locks.c)
-SET(mod_dav_lock_extra_libs          mod_dav)
 SET(mod_dbd_extra_defines            DBD_DECLARE_EXPORT)
 SET(mod_deflate_requires             ZLIB_FOUND)
 IF(ZLIB_FOUND)
@@ -524,7 +586,7 @@ SET(mod_md_extra_sources
   modules/md/md_ocsp.c               modules/md/md_util.c               
   modules/md/mod_md_config.c         modules/md/mod_md_drive.c
   modules/md/mod_md_os.c             modules/md/mod_md_status.c
-  modules/md/mod_md_ocsp.c           modules/md/md_tailscale.c
+  modules/md/mod_md_ocsp.c
 )
 SET(mod_optional_hook_export_extra_defines AP_DECLARE_EXPORT) # bogus reuse of core API prefix
 SET(mod_proxy_extra_defines          PROXY_DECLARE_EXPORT)
@@ -548,6 +610,7 @@ IF(LIBXML2_FOUND)
   SET(mod_proxy_html_extra_libs        "${LIBXML2_LIBRARIES};${LIBXML2_ICONV_LIBRARIES}")
 ENDIF()
 SET(mod_proxy_scgi_extra_libs        mod_proxy)
+SET(mod_proxy_uwsgi_extra_libs        mod_proxy)
 SET(mod_proxy_wstunnel_extra_libs    mod_proxy)
 SET(mod_lbmethod_bybusyness_extra_libs mod_proxy)
 SET(mod_lbmethod_bytraffic_extra_libs  mod_proxy)
@@ -756,6 +819,12 @@ SET(HTTPD_INCLUDE_DIRECTORIES
   ${PCRE_INCLUDE_DIR}
 )
 
+IF(BUILD_TEST_MODULES)
+  LIST(APPEND HTTPD_INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/pytest_suite/c-modules
+  )
+ENDIF()
+
 # The .h files we install from outside the main include directory
 # largely parallel the include directories above.
 SET(other_installed_h
@@ -879,8 +948,8 @@ FOREACH (mod ${MODULE_PATHS})
 
     # Extra defines?
     SET(mod_extra_defines "${mod_name}_extra_defines")
-    IF(NOT ${${mod_extra_defines}} STREQUAL "")
-      SET_TARGET_PROPERTIES(${mod_name} PROPERTIES COMPILE_DEFINITIONS ${${mod_extra_defines}})
+    IF(NOT "${${mod_extra_defines}}" STREQUAL "")
+      TARGET_COMPILE_DEFINITIONS(${mod_name} PRIVATE ${${mod_extra_defines}})
     ENDIF()
 
     # Extra includes?
@@ -978,6 +1047,43 @@ IF(OPENSSL_FOUND)
       "BIN_NAME=abs.exe"
   )
   TARGET_LINK_LIBRARIES(abs ${EXTRA_LIBS} ${APR_LIBRARIES} ${OPENSSL_LIBRARIES} Ws2_32.lib)
+ENDIF()
+
+IF(OPENSSL_FOUND AND CURL_FOUND AND JANSSON_FOUND)
+  SET(a2md_md_lib_sources
+    modules/md/md_acme.c               modules/md/md_acme_acct.c
+    modules/md/md_acme_authz.c         modules/md/md_acme_drive.c
+    modules/md/md_acmev2_drive.c       modules/md/md_event.c
+    modules/md/md_acme_order.c         modules/md/md_core.c
+    modules/md/md_curl.c               modules/md/md_crypt.c
+    modules/md/md_http.c               modules/md/md_json.c
+    modules/md/md_jws.c                modules/md/md_log.c
+    modules/md/md_result.c             modules/md/md_reg.c
+    modules/md/md_status.c             modules/md/md_store.c
+    modules/md/md_store_fs.c           modules/md/md_time.c
+    modules/md/md_ocsp.c               modules/md/md_util.c
+  )
+  SET(a2md_cmd_sources
+    support/a2md/md_cmd_main.c
+    support/a2md/md_cmd_acme.c
+    support/a2md/md_cmd_reg.c
+    support/a2md/md_cmd_store.c
+  )
+  ADD_EXECUTABLE(a2md ${a2md_cmd_sources} ${a2md_md_lib_sources} build/win32/httpd.rc)
+  SET(install_targets ${install_targets} a2md)
+  SET(install_bin_pdb ${install_bin_pdb} $<TARGET_PDB_FILE:a2md>)
+  SET(tmp_includes ${HTTPD_INCLUDE_DIRECTORIES}
+    ${OPENSSL_INCLUDE_DIR} ${CURL_INCLUDE_DIR} ${JANSSON_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/modules/md ${CMAKE_SOURCE_DIR}/support/a2md)
+  SET_TARGET_PROPERTIES(a2md PROPERTIES INCLUDE_DIRECTORIES "${tmp_includes}")
+  TARGET_COMPILE_DEFINITIONS(a2md PRIVATE
+      "APP_FILE"
+      "MD_A2MD_BUILD"
+      "LONG_NAME=Apache HTTP Server a2md program"
+      "BIN_NAME=a2md.exe"
+  )
+  TARGET_LINK_LIBRARIES(a2md ${EXTRA_LIBS} ${APR_LIBRARIES}
+    ${OPENSSL_LIBRARIES} ${CURL_LIBRARIES} ${JANSSON_LIBRARIES})
 ENDIF()
 
 # Unit Test Suite
@@ -1094,22 +1200,45 @@ ENDIF()
 INSTALL(DIRECTORY DESTINATION logs)
 INSTALL(DIRECTORY DESTINATION cgi-bin)
 
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_CURRENT_SOURCE_DIR}/docs/error\" \"${CMAKE_INSTALL_PREFIX}/error\" ifdestmissing)")
-
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_CURRENT_SOURCE_DIR}/docs/docroot\" \"${CMAKE_INSTALL_PREFIX}/htdocs\" ifdestmissing)")
-
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_CURRENT_SOURCE_DIR}/docs/icons\" \"${CMAKE_INSTALL_PREFIX}/icons\" ifdestmissing)")
+# Copy error, htdocs, icons only if the destination dir doesn't exist yet
+# (same semantics as cpR_noreplace.pl ifdestmissing, without Perl)
+INSTALL(CODE "
+    if(NOT IS_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/error\")
+        file(INSTALL \"${CMAKE_CURRENT_SOURCE_DIR}/docs/error/\" DESTINATION \"${CMAKE_INSTALL_PREFIX}/error\")
+    endif()
+")
+INSTALL(CODE "
+    if(NOT IS_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/htdocs\")
+        file(INSTALL \"${CMAKE_CURRENT_SOURCE_DIR}/docs/docroot/\" DESTINATION \"${CMAKE_INSTALL_PREFIX}/htdocs\")
+    endif()
+")
+INSTALL(CODE "
+    if(NOT IS_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/icons\")
+        file(INSTALL \"${CMAKE_CURRENT_SOURCE_DIR}/docs/icons/\" DESTINATION \"${CMAKE_INSTALL_PREFIX}/icons\")
+    endif()
+")
 
 # Copy generated .conf files from the build directory to the install,
-# without overwriting stuff already there.
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_BINARY_DIR}/conf\" \"${CMAKE_INSTALL_PREFIX}/conf\")")
+# without overwriting stuff already there (no Perl dependency).
+INSTALL(CODE "
+    file(GLOB_RECURSE _conf_files \"${CMAKE_BINARY_DIR}/conf/*\")
+    foreach(_f \${_conf_files})
+        # Skip conf/original/ — handled separately below
+        string(FIND \"\${_f}\" \"/conf/original/\" _is_original)
+        if(NOT \${_is_original} EQUAL -1)
+            continue()
+        endif()
+        file(RELATIVE_PATH _rel \"${CMAKE_BINARY_DIR}/conf\" \"\${_f}\")
+        set(_dest \"${CMAKE_INSTALL_PREFIX}/conf/\${_rel}\")
+        if(NOT EXISTS \"\${_dest}\")
+            get_filename_component(_dest_dir \"\${_dest}\" DIRECTORY)
+            file(COPY \"\${_f}\" DESTINATION \"\${_dest_dir}\")
+        endif()
+    endforeach()
+")
 # But conf/original is supposed to be overwritten.
-# Note: FILE(TO_NATIVE_PATH ...) leaves the backslashes unescaped, which
-#       generates warnings.  Just do it manually since this build only supports
-#       Windows anyway.
-STRING(REPLACE "/" "\\\\" native_src ${CMAKE_BINARY_DIR}/conf/original)
-STRING(REPLACE "/" "\\\\" native_dest ${CMAKE_INSTALL_PREFIX}/conf/original)
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND xcopy \"${native_src}\" \"${native_dest}\" /Q /S /Y)")
+INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/conf/original/"
+        DESTINATION conf/original)
 
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" buildtype)
 MESSAGE(STATUS "")
