@@ -155,7 +155,7 @@ typedef struct dav_lock_indirect
 /* Stored indirect lock info - lock token and apr_datum_t */
 #define dav_size_indirect(a) (1 + sizeof(apr_uuid_t) \
                                 + sizeof(time_t) \
-                                + sizeof(int) + (a)->key.dsize)
+                                + sizeof((a)->key.dsize) + (a)->key.dsize)
 
 /*
  * The lockdb structure.
@@ -667,7 +667,7 @@ static dav_error * dav_generic_load_lock_record(dav_lockdb *lockdb,
             memcpy(&ip->timeout, val.dptr + offset, sizeof(ip->timeout));
             offset += sizeof(ip->timeout);
             /* length of datum */
-            ip->key.dsize = *((int *) (val.dptr + offset));
+            memcpy(&ip->key.dsize, val.dptr + offset, sizeof(ip->key.dsize));
             offset += sizeof(ip->key.dsize);
             ip->key.dptr = apr_pmemdup(p, val.dptr + offset, ip->key.dsize);
             offset += ip->key.dsize;
